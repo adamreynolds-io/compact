@@ -158,10 +158,10 @@ impl FromStr for VersionSpec {
 
         // Try parsing as "major.minor"
         let parts: Vec<&str> = s.split('.').collect();
-        if parts.len() == 2 {
-            if let (Ok(major), Ok(minor)) = (parts[0].parse::<u64>(), parts[1].parse::<u64>()) {
-                return Ok(VersionSpec::Partial { major, minor });
-            }
+        if parts.len() == 2
+            && let (Ok(major), Ok(minor)) = (parts[0].parse::<u64>(), parts[1].parse::<u64>())
+        {
+            return Ok(VersionSpec::Partial { major, minor });
         }
 
         // Try parsing as "major" only
