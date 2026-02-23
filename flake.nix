@@ -354,7 +354,7 @@
               cp bin/compactc $out/bin
               mv $out/bin/compactc $out/bin/compactc.bin
               cp ${zkir.packages.${system}.zkir}/bin/zkir $out/lib/zkir
-              cp ${zkir-v3.packages.${system}.zkir-v3}/bin/zkir-v3 $out/lib/zkir-v3
+              cp ${zkir-v3.packages.${system}.zkir-v3}/bin/zkir $out/lib/zkir-v3
 
               chmod +w $out/lib/zkir
               chmod +w $out/lib/zkir-v3
