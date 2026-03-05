@@ -462,6 +462,8 @@
                      ...)
                     ...))))
         (define (find-functions function-name)
+          ; find-functions finds all of the Info-functions bindings for function-name
+          ; in the environment that are not shadowed by some other binding.
           (let outer ([p p] [rinfo-functions* '()] [rmaybe-alias* '()])
             (cond
               [(eq? p empty-env) (values rinfo-functions* rmaybe-alias* #f)]
@@ -494,6 +496,8 @@
               (let ([a (eq-hashtable-cell ht info-fun #f)])
                 (or (cdr a) (begin (set-cdr! a #t) #f))))))
         (let-values ([(rinfo-functions* rmaybe-alias* maybe-info) (find-functions function-name)])
+          ; check to see if of the function names are renamings of standard-library routines
+          ; (per standard-library-aliases.ss) and if so, record the alias or say why not
           (let ([alias-name (ormap values rmaybe-alias*)])
             (when alias-name
               (if (renaming-table)
@@ -509,12 +513,16 @@
                                        function-name
                                        alias-name))
                   (record-alias! src function-name alias-name))))
+          ; go through the the Info-functions list from innermost to outermost, pruning
+          ; duplicate function bindings, registering those that are compatible with the
+          ; generic arguments, and collecting a list of those that are not for infer-types.
           (let loop ([info-functions* (reverse rinfo-functions*)] [rid+* '()] [generic-failure* '()])
             (if (null? info-functions*)
                 (if (and (null? rid+*) (null? generic-failure*))
                     (if maybe-info
                         (context-oops src function-name maybe-info)
                         (source-errorf src "unbound identifier ~s" function-name))
+                    ; all done; return an `fref` form with the information gathered
                     (return (reverse rid+*) generic-failure*))
                 (Info-case (car info-functions*)
                   [(Info-functions name info-fun+)
