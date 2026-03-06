@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Internal notes
 
-- The expand-modules-and-types code for function lookup is more more modular and
+- The expand-modules-and-types code for function lookup is more modular and
   easier to read.
 
 ## [Unreleased toolchain 0.29.111, language 0.21.101, runtime 0.14.102]

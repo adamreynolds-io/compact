@@ -417,18 +417,18 @@
                            (nanopass-case (Lpreexpand Type-Param) type-param
                              [(nat-valued ,src^ ,tvar-name)
                               (Info-case info
-                                         [(Info-size src size) #t]
-                                         [else #f])]
+                                [(Info-size src size) #t]
+                                [else #f])]
                              [(type-valued ,src^ ,tvar-name)
                               (Info-case info
-                                         [(Info-type src type) #t]
-                                         [else #f])]
+                                [(Info-type src type) #t]
+                                [else #f])]
                              ; this is not presently reachable, since only adt definitions use
                              ; type-param kind non-adt-type-valued
                              [(non-adt-type-valued ,src^ ,tvar-name)
                               (Info-case info
-                                         [(Info-type src type) (not (public-adt? type))]
-                                         [else #f])]))
+                                [(Info-type src type) (not (public-adt? type))]
+                                [else #f])]))
                          type-param*
                          info*))))
         (define-record-type generic-failure
@@ -496,7 +496,7 @@
               (let ([a (eq-hashtable-cell ht info-fun #f)])
                 (or (cdr a) (begin (set-cdr! a #t) #f))))))
         (let-values ([(rinfo-functions* rmaybe-alias* maybe-info) (find-functions function-name)])
-          ; check to see if of the function names are renamings of standard-library routines
+          ; check to see if any of the function names are renamings of standard-library routines
           ; (per standard-library-aliases.ss) and if so, record the alias or say why not
           (let ([alias-name (ormap values rmaybe-alias*)])
             (when alias-name
@@ -591,7 +591,7 @@
                   [(Info-fixup-alias aliased-name info)
                    (if (renaming-table)
                        (let ([info^ (lookup/no-error p aliased-name)])
-                         (assertf info^ "aliased name ~s is not found in the environment" tvar-name)
+                         (assertf info^ "aliased name ~s is not found in the environment" aliased-name)
                          (if (eq? info^ info)
                              (record-alias! src tvar-name aliased-name)
                              (source-warningf src "not renaming reference of ~s to ~s because this would cause the reference to be captured by an existing local binding for ~:*~s"
