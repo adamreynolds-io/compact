@@ -9,10 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- The order of evaluation for `<=` and `>` differs in `print-typescript` and
-  `drop-ledger-runtime` passes.  This fix forces the order of evaluation in 
-  `infer-types` to prevent the downstream passes to change the evaluation order.
-
+- The `<=` and `>` operand evaluation order in the proof circuit is incorrect
+  (right-to-left rather than left-to-right).  It also differs from the evaluation
+  order in the generated JavaScript code, which can result in proof failures
+  when the operands are non-trivial.  This fix modifies the common upstream path
+  `infer-types` to enforce the correct evaluation order.
 
 ## [Unreleased toolchain 0.29.110, language 0.21.101, runtime 0.14.102]
 
