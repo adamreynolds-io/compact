@@ -207,7 +207,8 @@
          (begin
            (set-box! seen-keywords (cons (datum ?sym) (unbox seen-keywords)))
            #t)]
-        [_ (let ([x (syntax->datum x)]) (or (string? x) (char? x)))]))
+        [?eof (eq? (datum ?eof) 'eof) #t]
+        [?k (let ([x (datum ?k)]) (or (string? x) (char? x)))]))
     (meta define (suppress-constant? x) #f)
     (meta define (constant->parser x)
       (syntax-case x ()
@@ -217,6 +218,11 @@
              (lambda (x)
                (and (eq? (token-type x) 'id)
                     (eq? (token-value x) '?sym))))]
+        [?eof
+         (eq? (datum ?eof) 'eof)
+         #`(sat/what "end of file"
+             (lambda (x)
+               (eq? (token-type x) 'eof)))]
         [?k
          #`(sat/what #,(format "\"~a\"" (datum ?k))
              (lambda (x)
@@ -235,14 +241,15 @@
             [(#\return) ""]
             [else c]))
         (format "~{~a~}" (map html-text-char (if (string? x) (string->list x) (list x)))))
-      (format "<tt>~a</tt>"
-        (cond
-          [(pair? const)
-           (assert (and (list? const)
-                        (= (length const) 2)
-                        (eq? (car const) 'KEYWORD)))
-           (cadr const)]
-          [else (html-text-string const)])))
+      (cond
+        [(pair? const)
+         (assert (and (list? const)
+                      (= (length const) 2)
+                      (eq? (car const) 'KEYWORD)))
+         (format "<tt>~a</tt>" (cadr const))]
+        ; eof appears in the grammar but we don't want to see it
+        [(eq? const 'eof) ""]
+        [else (format "<tt>~a</tt>" (html-text-string const))]))
     |#
     (import (markdown))
     (meta define render-extension "mdx")
@@ -268,14 +275,15 @@
             [(#\return) ""]
             [else c]))
         (format "~{~a~}" (map html-text-char (if (string? x) (string->list x) (list x)))))
-      (format "`~a`"
-        (cond
-          [(pair? const)
-           (assert (and (list? const)
-                        (= (length const) 2)
-                        (eq? (car const) 'KEYWORD)))
-           (cadr const)]
-          [else (html-text-string const)])))
+      (cond
+        [(pair? const)
+         (assert (and (list? const)
+                      (= (length const) 2)
+                      (eq? (car const) 'KEYWORD)))
+         (format "`~a`" (cadr const))]
+        ; eof appears in the grammar but we don't want to see it
+        [(eq? const 'eof) ""]
+        [else (format "`~a`" (html-text-string const))]))
     (define (src0) (make-source-object (parse-sfd) 0 0 1 1))
     (define (make-src bsrc esrc)
       (if (eq? bsrc esrc)
@@ -292,8 +300,6 @@
     (include "third_party/compiler/ez-grammar.ss"))
 
 ;;  (define waste (grammar-trace #t))
-
-  (define end-of-file (sat/what "end of file" (lambda (x) (eq? (token-type x) 'eof))))
 
   (define identifier (sat/what "an identifier" (lambda (x) (and (eq? (token-type x) 'id) (unreserved? (token-value x))))))
 
@@ -337,9 +343,6 @@
                "The rules involving commas apply equally to semicolons, i.e., apply when"
                "`,` is replaced by `;`."))
     (TERMINALS
-      (end-of-file (eof)
-        (DESCRIPTION
-          ("End of file.")))
       (identifier (id module-name function-name struct-name enum-name contract-name tvar-name type-name)
         (DESCRIPTION
           ("Identifiers have the same syntax as Typescript identifiers.")))
@@ -353,11 +356,11 @@
         (DESCRIPTION
           ("A version literal takes the form nat or nat.nat or nat.nat.nat, e.g., 1.2 or 1.2.3, representing major, minor, and bugfix versions."))))
     (Compact (program)
-      [program :: src (K* pelt) eof =>
+      [program :: src (K* program-element) eof =>
        (lambda (src pelt* eof)
          (with-output-language (Lparser Program)
            `(program ,src ,pelt* ... ,eof)))])
-    (Program-element (pelt)
+    (Program-element (program-element)
       [program-element-pragma :: pragma-form => values]
       [program-element-module-definition :: module-definition => values]
       [program-element-import-declaration :: import-form => values]
@@ -431,7 +434,7 @@
           (with-output-language (Lparser Include)
             `(include ,src ,kwd ,file ,semicolon)))])
     (Module-definition (module-definition)
-      [module-definition :: src (OPT (KEYWORD export) #f) (KEYWORD module) module-name (OPT gparams #f) #\{ (K* pelt) #\} =>
+      [module-definition :: src (OPT (KEYWORD export) #f) (KEYWORD module) module-name (OPT gparams #f) #\{ (K* program-element) #\} =>
        (lambda (src kwd-export? kwd module-name generic-param-list? lbrace pelt* rbrace)
          (with-output-language (Lparser Module-Definition)
            `(module ,src ,kwd-export? ,kwd ,module-name ,generic-param-list? ,lbrace ,pelt* ... ,rbrace)))])

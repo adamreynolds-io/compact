@@ -147,18 +147,18 @@ in [Circuits definitions](#circuit-definitions).
 
 The following terminal names appear in the grammar snippets.
 
-@(terminals id module-name function-name struct-name enum-name contract-name tvar-name type-name)
+@(anchor-here id module-name function-name struct-name enum-name contract-name tvar-name type-name)
 - *id*, *module-name*, *function-name*, *struct-name*, *enum-name*,
 *contract-name*, *tvar-name*, and *type-name*
 all represent identifier tokens.
 
-@(terminals nat)
+@(anchor-here nat)
 - *nat* represents natural-number literals.
 
-@(terminals str file)
+@(anchor-here str file)
 - *str* and *file* represent string literals.
 
-@(terminals version)
+@(anchor-here version)
 - *version* represents version literals (in pragmas).
 
 While identifiers and string literals are each represented by more than one name,
@@ -319,7 +319,7 @@ Each parameter is either a type name (e.g., `T`) or a hash-prefixed natural-numb
 Generic natural-number parameters are prefixed by `#` to distingish them from
 generic type parameters.
 
-@(nonterminals gparams generic-param)
+@(request-snippet gparams generic-param)
 
 Generic entities must be *specialized* at the point of use to produce non-generic
 entities at compile time by supplying them with *generic arguments*.
@@ -328,7 +328,7 @@ Generic arguments are also enclosed in angle brackets.
 Each generic argument must be a type, a natural number literal, or the type or
 numeric value of a generic parameter.
 
-@(nonterminals gargs garg)
+@(request-snippet gargs garg)
 
 The syntax of types allows for type references, including references to generic
 parameters, so any generic argument can pass along the value of a generic type
@@ -400,7 +400,7 @@ As with any other generic entity, it must be specialized at the point of use.
 
 The following are the primitive types of Compact:
 
-@(nonterminals type tref tsize)
+@(request-snippet type tref tsize)
 
 - `Boolean` is the type of *Boolean* values.  There are only two values of
   `Boolean` type.  They are the values of the expressions `true` and `false`.
@@ -477,7 +477,7 @@ They can also define structural and nominal aliases for existing types.
 
 Structure types are defined via `struct` declarations with the following form:
 
-@(nonterminals struct-declaration typed-id)
+@(request-snippet struct-declaration typed-id)
 
 A structure declaration has a sequence of named fields which must be separated
 either by commas or by semicolons.  Comma and semicolon separators cannot be
@@ -585,7 +585,7 @@ and accessed via
 
 Enumeration types are defined via `enum` declarations with the following form:
 
-@(nonterminals enum-declaration)
+@(request-snippet enum-declaration)
 
 An enumeration declaration has a non-empty sequence of named elements separated by commas.
 A trailing comma is allowed but not required.
@@ -605,6 +605,7 @@ names (in the same order) and distinct otherwise.
 
 #### Contract types
 
+@(anchor-here contract-declaration circuit-declaration)
 Compact 1.0 does not fully implement declarations of contracts and the
 cross-contract calls they support, but the keyword `contract` used to declare
 contracts is reserved for this use.
@@ -613,7 +614,7 @@ contracts is reserved for this use.
 
 Type aliases can be created via `type` declarations of the form:
 
-@(nonterminals type-alias-declaration)
+@(request-snippet type-alias-declaration)
 
 Within the scope of a type-alias declaration of *type-name* for *type*, *type-name*
 is itself a type.
@@ -728,7 +729,7 @@ tuple is expected.
 The parameters of a circuit or constructor and the target of a `const` binding
 are specified via patterns:
 
-@(nonterminals pattern pattern-struct-elt)
+@(request-snippet pattern pattern-struct-elt)
 
 In its simplest form, a pattern is just an identifier.
 For example, in the code below, the parameter of `sumTuple` is the identifier
@@ -869,7 +870,7 @@ circuit sumSomeYs([{y: b1,}, , {y: b3,},]: [S, S, S]): Field {
 
 A compact program is a sequence of zero or more program elements.
 
-@(nonterminals program pelt)
+@(request-snippet program program-element)
 
 Briefly:
 
@@ -903,7 +904,7 @@ section.
 A pragma takes the following form and declares a constraint on either the compiler
 version (*id* = `compiler_version`) or the language version (*id* = `language_version`)
 
-@(nonterminals pragma-form version-expr version-expr0 version-term version-atom)
+@(request-snippet pragma-form version-expr version-expr0 version-term version-atom)
 
 *version* is a dot-separated pair or trio of natural numbers, so along
 with *nat* this allows *version* to be either a single natural number,
@@ -927,7 +928,7 @@ programs into multiple files.
 A module is a named collection of program elements created via a module definition,
 which takes the following form:
 
-@(nonterminals module-definition)
+@(request-snippet module-definition)
 
 A module definition makes a binding from `module-name` to the module visible in
 the program or module containing the module definition.
@@ -947,7 +948,7 @@ Any identifier defined at or imported into the top level of a module can be expo
 from the module in one of two ways: (1) by prefixing the definition with the
 `export` keyword, or by listing the identifier in a separate `export` declaration:
 
-@(nonterminals export-form)
+@(request-snippet export-form)
 
 For example, the following module exports `G` and `S` but not `F`.
 
@@ -971,7 +972,7 @@ Exporting a binding from a module has no effect unless the module is imported.
 A module can be imported into another module or into the program top level, making
 some or all of its exported bindings visible there, potentially with a prefix.
 
-@(nonterminals import-form import-selection import-element import-name import-prefix)
+@(request-snippet import-form import-selection import-element import-name import-prefix)
 
 For example:
 
@@ -1159,7 +1160,7 @@ Compact allows programs and modules to be split into multiple files and spliced
 togther via `include` forms, which have the following syntax, where `file` is a
 string literal specifying a filesystem pathname for file to be included:
 
-@(nonterminals include-form)
+@(request-snippet include-form)
 
 `file` can be an absolute pathname, one that is relative to the directory
 of the including file, or one that is relative to one of the directories in the
@@ -1191,7 +1192,7 @@ Witnesses must be declared to make them visible to the circuits of a contract.
 A witness declaration does not include a body, because the implementation is
 provided by the TypeScript driver.
 
-@(nonterminals witness-declaration simple-parameter-list typed-id)
+@(request-snippet witness-declaration simple-parameter-list typed-id)
 
 Witness declarations can appear anywhere among the program elements of
 a module or the contract's top level.
@@ -1224,7 +1225,7 @@ Multiple ledger declarations can appear in a program, or none.
 They can appear anywhere among the program elements of a module or the contract's
 top level.
 
-@(nonterminals ledger-declaration)
+@(request-snippet ledger-declaration)
 
 A ledger declaration binds a ledger field name to one of a
 set of predefined [ledger-state types](#ledger-state-types).
@@ -1441,7 +1442,7 @@ reachable from an exported circuit.
 A contract can be initialized via a contract constructor defined at the
 program's top level.
 
-@(nonterminals constructor-definition pattern-parameter-list typed-pattern)
+@(request-snippet constructor-definition pattern-parameter-list typed-pattern)
 
 The constructor, if any, is typically used to initialize public state
 and can also be used to initialize private state through witness
@@ -1494,7 +1495,7 @@ in [Circuit and witness calls](#circuit-and-witness-calls).
 
 Named circuit definitions have the following syntax:
 
-@(nonterminals circuit-definition pattern-parameter-list typed-pattern)
+@(request-snippet circuit-definition pattern-parameter-list typed-pattern)
 
 A circuit definition binds `function-name` to a circuit with the given parameters,
 type, and body.
@@ -1570,7 +1571,7 @@ Compact program by the Compact compiler.
 
 A `block` is a group of statements enclosed in braces:
 
-@(nonterminals block)
+@(request-snippet block)
 
 A block can be used in place of a single statement anywhere a single statement
 is allowed, which is useful for allowing multiple statements to be evaluated by the
@@ -1593,7 +1594,7 @@ A block is evaluated by evaluating the statements in sequence.
 
 The syntax of Compact statements is summarized by the following grammar snippet:
 
-@(nonterminals stmt stmt0)
+@(request-snippet stmt stmt0)
 
 The snippet shows that a statement (`stmt`) is either a one-armed `if` expression
 or some other kinf of statement (`stmt0`).
@@ -1633,7 +1634,7 @@ const cbindings
 where `cbindings` is a comma-separated sequence of one or more `cbinding` subforms
 in the syntax specified by the following grammar snippet:
 
-@(nonterminals cbinding optionally-typed-pattern pattern-struct-elt)
+@(request-snippet cbinding optionally-typed-pattern pattern-struct-elt)
 
 A `const` statement is typed by typing each of its `cbinding` subforms.
 A `cbinding` subform is typed by typing the expression on the right-hand side
@@ -1834,7 +1835,7 @@ subsequent statements, and it returns to the caller the value of `expr-seq` or
 
 The syntax of Compact expressions is summarized by the following grammar snippet:
 
-@(nonterminals expr-seq expr expr0 expr1 expr2 expr3 expr4 expr5 expr6 expr7 expr8 expr9 tuple-arg bytes-arg struct-arg term)
+@(request-snippet expr-seq expr expr0 expr1 expr2 expr3 expr4 expr5 expr6 expr7 expr8 expr9 tuple-arg bytes-arg struct-arg term)
 
 Every Compact expression must be well-typed (free from static type errors).
 If any expression within a program contains a static type error, it is a static
@@ -2518,7 +2519,7 @@ type of `e` is an enumeration type.
 
 ### Circuit and witness calls
 
-@(nonterminals fun arrow-parameter-list optionally-typed-pattern pattern pattern-struct-elt return-type)
+@(request-snippet fun arrow-parameter-list optionally-typed-pattern pattern pattern-struct-elt return-type)
 
 Circuits and witnesses, collectively referred to as functions, are called via an
 expression of the form `f(e, ...)`, where `f` is a function and `e, ...` is a

@@ -112,12 +112,12 @@
                     (lambda (req)
                       (cons
                         (syntax-case req ()
-                          [(?terminals name ...)
-                           (and (eq? #'?terminals 'terminals) (andmap symbol? #'(name ...)))
-                           `(terminals ,current-anchor ,@#'(name ...))]
-                          [(?nonterminals name ...)
-                           (and (eq? #'?nonterminals 'nonterminals) (andmap symbol? #'(name ...)))
-                           `(nonterminals ,current-anchor ,@#'(name ...))]
+                          [(?anchor-here name ...)
+                           (and (eq? #'?anchor-here 'anchor-here) (andmap symbol? #'(name ...)))
+                           `(anchor-here ,current-anchor ,@#'(name ...))]
+                          [(?request-snippet name ...)
+                           (and (eq? #'?request-snippet 'request-snippet) (andmap symbol? #'(name ...)))
+                           `(request-snippet ,current-anchor ,@#'(name ...))]
                           [else (errorf who "malformed snippet request on line ~d: ~s" line-number req)])
                         (f current-anchor line-number)))
                     (lambda ()
@@ -151,11 +151,11 @@
                         (outer snippet* line-number))
                       (lambda (req)
                         (syntax-case req ()
-                          [(?terminals name ...)
-                           (and (eq? #'?terminals 'terminals) (andmap symbol? #'(name ...)))
+                          [(?anchor-here name ...)
+                           (and (eq? #'?anchor-here 'anchor-here) (andmap symbol? #'(name ...)))
                            (outer snippet* line-number)]
-                          [(?nonterminals name ...)
-                           (and (eq? #'?nonterminals 'nonterminals) (andmap symbol? #'(name ...)))
+                          [(?request-snippet name ...)
+                           (and (eq? #'?request-snippet 'request-snippet) (andmap symbol? #'(name ...)))
                            (begin
                              (put-string op (car snippet*))
                              (outer (cdr snippet*) line-number))]

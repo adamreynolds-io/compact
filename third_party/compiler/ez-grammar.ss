@@ -648,9 +648,7 @@
                  (let ([one (format-elt (kleene-elt-elt x))])
                    (format "~a ⋯~@[~*¹~] ~2:*~a" one (kleene-elt-+? x)))]
                 [(constant-elt? x)
-                 (with-output-to-string
-                   (lambda ()
-                     (display-string (constant->html (syntax->datum (constant-elt-k x))))))]
+                 (constant->html (syntax->datum (constant-elt-k x)))]
                 [(id-elt? x)
                  (with-output-to-string
                    (lambda ()
@@ -777,12 +775,13 @@
                             (set-cdr! a anchor))))
                     name*))
                 (syntax-case req ()
-                  [(?terminals anchor name ...)
-                   (and (eq? #'?terminals 'terminals) (string? #'anchor) (andmap symbol? #'(name ...)))
+                  [(?anchor-here anchor name ...)
+                   (and (eq? #'?anchor-here 'anchor-here) (string? #'anchor) (andmap symbol? #'(name ...)))
                    (record #'anchor #'(name ...))]
-                  [(?nonterminals anchor name ...)
-                   (and (eq? #'?nonterminals 'nonterminals) (string? #'anchor) (andmap symbol? #'(name ...)))
-                   (record #'anchor #'(name ...))]))
+                  [(?request-snippet anchor name ...)
+                   (and (eq? #'?request-snippet 'request-snippet) (string? #'anchor) (andmap symbol? #'(name ...)))
+                   (record #'anchor #'(name ...))]
+                  [else (errorf 'create-snippets "malformed snippet request ~s" req)]))
               requested-snippets)
             (for-each
               (lambda (section)
@@ -794,7 +793,7 @@
                             (for-each
                               (lambda (alias)
                                 (unless (hashtable-contains? env alias)
-                                  (hashtable-set! env alias "dummy")
+                                  (hashtable-set! env alias "")
                                   (warningf 'create-snippets "unrequested terminal name ~s" alias)))
                               (terminal-alias* term)))
                           (terminal-clause-term* clause))
@@ -818,6 +817,10 @@
                                         (values (car alias*) (cdr alias*)))])
                           (hashtable-set! nonterminal-snippets primary-alias
                             (lambda ()
+                              (define (render-error c)
+                                (errorf 'create-snippets
+                                        "error occurred while rendering snippet: ~a"
+                                        (with-output-to-string (display-condition c))))
                               (let ([prod* (nonterminal-clause-prod* clause)])
                                 (when (null? prod*) (errorf 'create-snippets "can't yet handle empty list of productions"))
                                 (let ([prod (car prod*)] [prod* (cdr prod*)])
@@ -848,18 +851,23 @@
                 (fold-right
                   (lambda (req snippet*)
                     (syntax-case req ()
-                      [(?terminals anchor alias ...)
-                       (eq? #'?terminals 'terminals)
+                      [(?anchor-here anchor alias ...)
+                       (eq? #'?anchor-here 'anchor-here)
                        snippet*]
-                      [(?nonterminals anchor alias ...)
-                       (eq? #'?nonterminals 'nonterminals)
+                      [(?request-snippet anchor alias ...)
+                       (eq? #'?request-snippet 'request-snippet)
                        (cons
                          (with-output-to-string
                            (lambda ()
                              (<table> ()
                                (for-each
                                  (lambda (alias)
-                                   ((lookup alias nonterminal-snippets)))
+                                   (let ([th (hashtable-ref nonterminal-snippets alias #f)])
+                                     (unless th
+                                       (errorf 'create-snippets
+                                               "unrecognized nonterminal name ~s from snippet request"
+                                               alias))
+                                     (th)))
                                  #'(alias ...)))))
                          snippet*)]))
                   '()
