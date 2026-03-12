@@ -128,12 +128,50 @@
                              (errorf who
                                      "file ended in code block that started on line ~d"
                                      line-number)]
-                            [(code-end? line) (f current-anchor line-number)]
+                            [(code-end? line) (f current-anchor line-number^)]
                             [else (loop line-number^)]))))
                     (lambda () (f current-anchor line-number))))))))))
   
-  (define (write-mdx-file proto-file mdx-file)
-    (fluid-let ([who 'get-requested-snippets]
+  (define (write-mdx-file snippet* proto-file mdx-file)
+    (define (put-line op line) (fprintf op "~a\n" line))
+    (fluid-let ([who 'write-mdx-file]
                 [anchor-ht (make-hashtable string-hash string=?)])
-      (assert #f)))
+      (call-with-port
+        (open-input-file proto-file)
+        (lambda (ip)
+          (call-with-port
+            (open-output-file mdx-file 'replace)
+            (lambda (op)
+              (let outer ([snippet* snippet*] [line-number 0])
+                (let ([line (get-line ip)] [line-number (fx+ line-number 1)])
+                  (unless (eof-object? line)
+                    (parse-text line line-number
+                      (lambda (anchor)
+                        (put-line op line)
+                        (outer snippet* line-number))
+                      (lambda (req)
+                        (syntax-case req ()
+                          [(?terminals name ...)
+                           (and (eq? #'?terminals 'terminals) (andmap symbol? #'(name ...)))
+                           (outer snippet* line-number)]
+                          [(?nonterminals name ...)
+                           (and (eq? #'?nonterminals 'nonterminals) (andmap symbol? #'(name ...)))
+                           (begin
+                             (put-string op (car snippet*))
+                             (outer (cdr snippet*) line-number))]
+                          [else (errorf who "malformed snippet request on line ~d: ~s" line-number req)]))
+                      (lambda ()
+                        (put-line op line)
+                        (let inner ([line-number^ line-number])
+                          (let ([line (get-line ip)] [line-number^ (fx+ line-number^ 1)])
+                            (cond
+                              [(eof-object? line)
+                               (errorf who
+                                       "file ended in code block that started on line ~d"
+                                       line-number)]
+                              [(code-end? line) (put-line op line) (outer snippet* line-number^)]
+                              [else (put-line op line) (inner line-number^)]))))
+                      (lambda ()
+                        (put-line op line)
+                        (outer snippet* line-number))))))))))))
 )

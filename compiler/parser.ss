@@ -180,7 +180,8 @@
          ; so officially, we reserve it for future use
          (not (string-prefix? "__compact" (symbol->string x)))))
 
-  (module (define-grammar is sat sat/what parse-consumed-all? parse-result-value grammar-trace snippets)
+  (module (define-grammar is sat sat/what parse-consumed-all? parse-result-value grammar-trace
+           lang-ref-proto lang-ref-mdx snippets)
     (meta define seen-keywords (box (keyword-group-words keywordReservedForFutureUse)))
     (module ()
       (define-syntax a (lambda (x) #`'#,(datum->syntax #'* seen-keywords)))
@@ -908,8 +909,6 @@
              `(,langle (,parg* ...) (,sep* ...) ,rangle))))])
   )
 
-  (meta define ignore (for-each display-string (snippets)))
-
   (define (parse token-stream)
     ;;; return the first result, if any, for which the input stream was entirely consumed.
     (Compact token-stream
@@ -1002,6 +1001,9 @@
     (parse-file        Lsrc))
 
   (meta begin
+    (let ()
+      (import (snippet-helpers))
+      (write-mdx-file (snippets) lang-ref-proto lang-ref-mdx))
     (with-output-to-file "doc/compact-keywords.mdx"
       (lambda ()
         (define (do-group kd)
