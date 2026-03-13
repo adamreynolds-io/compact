@@ -816,7 +816,7 @@
          (let-values ([(tuple-arg* sep*) (split-sep tuple-arg-sep*)])
            (with-output-language (Lparser Expression)
              `(tuple ,src ,lbracket (,tuple-arg* ...) (,sep* ...) ,rbracket))))]
-      [term-bytes :: src (KEYWORD Bytes) #\[ (SEP* tuple-arg #\, #t) #\] =>
+      [term-bytes :: src (KEYWORD Bytes) #\[ (SEP* bytes-arg #\, #t) #\] =>
        (lambda (src kwd lbracket bytes-arg-sep* rbracket)
          (let-values ([(bytes-arg* sep*) (split-sep bytes-arg-sep*)])
            (with-output-language (Lparser Expression)

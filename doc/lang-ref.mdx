@@ -1311,7 +1311,6 @@ provided by the TypeScript driver.
 |-------------------------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | *witness-declaration*   | &xrarr; | `export`<sup>opt</sup> `witness` [*id*](#terminal-names) [*gparams*](#generic-parameters-and-arguments)<sup>opt</sup> [*simple-parameter-list*](#declaring-witnesses-for-private-state-management) `:` [*type*](#primitive-types) `;` |
 | *simple-parameter-list* | &xrarr; | `(` [*typed-id*](#structure-types) `,` ⋯ `,` [*typed-id*](#structure-types) `,`<sup>opt</sup> `)`                                                                                                                                     |
-| *typed-id*              | &xrarr; | [*id*](#terminal-names) `:` [*type*](#primitive-types)                                                                                                                                                                                |
 </div>
 
 
@@ -1629,11 +1628,9 @@ in [Circuit and witness calls](#circuit-and-witness-calls).
 Named circuit definitions have the following syntax:
 
 <div className="lang-ref-table">
-|                          |         |                                                                                                                                                                                                                                                           |
-|--------------------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| *circuit-definition*     | &xrarr; | `export`<sup>opt</sup> `pure`<sup>opt</sup> `circuit` [*function-name*](#terminal-names) [*gparams*](#generic-parameters-and-arguments)<sup>opt</sup> [*pattern-parameter-list*](#contract-constructor) `:` [*type*](#primitive-types) [*block*](#blocks) |
-| *pattern-parameter-list* | &xrarr; | `(` [*typed-pattern*](#contract-constructor) `,` ⋯ `,` [*typed-pattern*](#contract-constructor) `,`<sup>opt</sup> `)`                                                                                                                                     |
-| *typed-pattern*          | &xrarr; | [*pattern*](#patterns-and-destructuring) `:` [*type*](#primitive-types)                                                                                                                                                                                   |
+|                      |         |                                                                                                                                                                                                                                                           |
+|----------------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *circuit-definition* | &xrarr; | `export`<sup>opt</sup> `pure`<sup>opt</sup> `circuit` [*function-name*](#terminal-names) [*gparams*](#generic-parameters-and-arguments)<sup>opt</sup> [*pattern-parameter-list*](#contract-constructor) `:` [*type*](#primitive-types) [*block*](#blocks) |
 </div>
 
 
@@ -1799,8 +1796,6 @@ in the syntax specified by the following grammar snippet:
 | *cbinding*                 | &xrarr; | [*optionally-typed-pattern*](#const-statements) `=` [*expr*](#expressions) |
 | *optionally-typed-pattern* | &xrarr; | [*pattern*](#patterns-and-destructuring)                                   |
 |                            | \|      | [*typed-pattern*](#contract-constructor)                                   |
-| *pattern-struct-elt*       | &xrarr; | [*id*](#terminal-names)                                                    |
-|                            | \|      | [*id*](#terminal-names) `:` [*pattern*](#patterns-and-destructuring)       |
 </div>
 
 
@@ -2043,17 +2038,11 @@ The syntax of Compact expressions is summarized by the following grammar snippet
 |                    | \|      | `fold` `(` [*fun*](#circuit-and-witness-calls) `,` [*expr*](#expressions) `,` [*expr*](#expressions) `,` ⋯¹ `,` [*expr*](#expressions) `,`<sup>opt</sup> `)` |
 |                    | \|      | `slice` `<` [*tsize*](#primitive-types) `>` `(` [*expr*](#expressions) `,` [*expr*](#expressions) `)`                                                        |
 |                    | \|      | `[` [*tuple-arg*](#expressions) `,` ⋯ `,` [*tuple-arg*](#expressions) `,`<sup>opt</sup> `]`                                                                  |
-|                    | \|      | `Bytes` `[` [*tuple-arg*](#expressions) `,` ⋯ `,` [*tuple-arg*](#expressions) `,`<sup>opt</sup> `]`                                                          |
+|                    | \|      | `Bytes` `[` [*bytes-arg*](#expressions) `,` ⋯ `,` [*bytes-arg*](#expressions) `,`<sup>opt</sup> `]`                                                          |
 |                    | \|      | [*tref*](#primitive-types) `{` [*struct-arg*](#expressions) `,` ⋯ `,` [*struct-arg*](#expressions) `,`<sup>opt</sup> `}`                                     |
 |                    | \|      | `assert` `(` [*expr*](#expressions) `,` [*str*](#terminal-names) `)`                                                                                         |
 |                    | \|      | `disclose` `(` [*expr*](#expressions) `)`                                                                                                                    |
 |                    | \|      | [*term*](#expressions)                                                                                                                                       |
-| *tuple-arg*        | &xrarr; | [*expr*](#expressions)                                                                                                                                       |
-|                    | \|      | `...` [*expr*](#expressions)                                                                                                                                 |
-| *bytes-arg*        | &xrarr; | [*tuple-arg*](#expressions)                                                                                                                                  |
-| *struct-arg*       | &xrarr; | [*expr*](#expressions)                                                                                                                                       |
-|                    | \|      | [*id*](#terminal-names) `:` [*expr*](#expressions)                                                                                                           |
-|                    | \|      | `...` [*expr*](#expressions)                                                                                                                                 |
 | *term*             | &xrarr; | [*id*](#terminal-names)                                                                                                                                      |
 |                    | \|      | `true`                                                                                                                                                       |
 |                    | \|      | `false`                                                                                                                                                      |
@@ -2062,6 +2051,12 @@ The syntax of Compact expressions is summarized by the following grammar snippet
 |                    | \|      | `pad` `(` [*nat*](#terminal-names) `,` [*str*](#terminal-names) `)`                                                                                          |
 |                    | \|      | `default` `<` [*type*](#primitive-types) `>`                                                                                                                 |
 |                    | \|      | `(` [*expr-seq*](#expressions) `)`                                                                                                                           |
+| *struct-arg*       | &xrarr; | [*expr*](#expressions)                                                                                                                                       |
+|                    | \|      | [*id*](#terminal-names) `:` [*expr*](#expressions)                                                                                                           |
+|                    | \|      | `...` [*expr*](#expressions)                                                                                                                                 |
+| *bytes-arg*        | &xrarr; | [*tuple-arg*](#expressions)                                                                                                                                  |
+| *tuple-arg*        | &xrarr; | [*expr*](#expressions)                                                                                                                                       |
+|                    | \|      | `...` [*expr*](#expressions)                                                                                                                                 |
 </div>
 
 
@@ -2748,21 +2743,14 @@ type of `e` is an enumeration type.
 ### Circuit and witness calls
 
 <div className="lang-ref-table">
-|                            |         |                                                                                                                                                   |
-|----------------------------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------|
-| *fun*                      | &xrarr; | [*id*](#terminal-names) [*gargs*](#generic-parameters-and-arguments)<sup>opt</sup>                                                                |
-|                            | \|      | [*arrow-parameter-list*](#circuit-and-witness-calls) [*return-type*](#circuit-and-witness-calls)<sup>opt</sup> `=>` [*block*](#blocks)            |
-|                            | \|      | [*arrow-parameter-list*](#circuit-and-witness-calls) [*return-type*](#circuit-and-witness-calls)<sup>opt</sup> `=>` [*expr*](#expressions)        |
-|                            | \|      | `(` [*fun*](#circuit-and-witness-calls) `)`                                                                                                       |
-| *arrow-parameter-list*     | &xrarr; | `(` [*optionally-typed-pattern*](#const-statements) `,` ⋯ `,` [*optionally-typed-pattern*](#const-statements) `,`<sup>opt</sup> `)`               |
-| *optionally-typed-pattern* | &xrarr; | [*pattern*](#patterns-and-destructuring)                                                                                                          |
-|                            | \|      | [*typed-pattern*](#contract-constructor)                                                                                                          |
-| *pattern*                  | &xrarr; | [*id*](#terminal-names)                                                                                                                           |
-|                            | \|      | `[` [*pattern*](#patterns-and-destructuring)<sup>opt</sup> `,` ⋯ `,` [*pattern*](#patterns-and-destructuring)<sup>opt</sup> `,`<sup>opt</sup> `]` |
-|                            | \|      | `{` [*pattern-struct-elt*](#patterns-and-destructuring) `,` ⋯ `,` [*pattern-struct-elt*](#patterns-and-destructuring) `,`<sup>opt</sup> `}`       |
-| *pattern-struct-elt*       | &xrarr; | [*id*](#terminal-names)                                                                                                                           |
-|                            | \|      | [*id*](#terminal-names) `:` [*pattern*](#patterns-and-destructuring)                                                                              |
-| *return-type*              | &xrarr; | `:` [*type*](#primitive-types)                                                                                                                    |
+|                        |         |                                                                                                                                            |
+|------------------------|---------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| *fun*                  | &xrarr; | [*id*](#terminal-names) [*gargs*](#generic-parameters-and-arguments)<sup>opt</sup>                                                         |
+|                        | \|      | [*arrow-parameter-list*](#circuit-and-witness-calls) [*return-type*](#circuit-and-witness-calls)<sup>opt</sup> `=>` [*block*](#blocks)     |
+|                        | \|      | [*arrow-parameter-list*](#circuit-and-witness-calls) [*return-type*](#circuit-and-witness-calls)<sup>opt</sup> `=>` [*expr*](#expressions) |
+|                        | \|      | `(` [*fun*](#circuit-and-witness-calls) `)`                                                                                                |
+| *arrow-parameter-list* | &xrarr; | `(` [*optionally-typed-pattern*](#const-statements) `,` ⋯ `,` [*optionally-typed-pattern*](#const-statements) `,`<sup>opt</sup> `)`        |
+| *return-type*          | &xrarr; | `:` [*type*](#primitive-types)                                                                                                             |
 </div>
 
 

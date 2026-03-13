@@ -760,99 +760,167 @@
                 (for-each (render-paragraph #f) (grammar-paragraph* grammar))
                 (for-each render-section (grammar-section* grammar))))
             'replace))
-        (define (create-snippets requested-snippets grammar)
-          (let ([env (make-alias-hashtable)])
-            (for-each
-              (lambda (req)
-                (define (record anchor name*)
-                  (for-each
-                    (lambda (name)
-                      (let ([a (hashtable-cell env name #f)])
-                        (unless (cdr a)
-                          (set-cdr! a anchor))))
-                    name*))
-                (syntax-case req ()
-                  [(?anchor-here anchor name ...)
-                   (and (eq? #'?anchor-here 'anchor-here) (string? #'anchor) (andmap symbol? #'(name ...)))
-                   (record #'anchor #'(name ...))]
-                  [(?request-snippet anchor name ...)
-                   (and (eq? #'?request-snippet 'request-snippet) (string? #'anchor) (andmap symbol? #'(name ...)))
-                   (record #'anchor #'(name ...))]
-                  [else (errorf 'create-snippets "malformed snippet request ~s" req)]))
-              requested-snippets)
-            (for-each
-              (lambda (section)
+        (define (create-snippets directive* grammar)
+          (define-record-type snippet-request
+            (nongenerative)
+            (fields anchor (mutable alias*)))
+          (let ([env (make-alias-hashtable)]
+                [snippet-request-ht (make-alias-hashtable)])
+            (define (process-directive snippet-request* directive)
+              (define (record-anchor! anchor alias*)
                 (for-each
-                  (lambda (clause)
-                    (if (terminal-clause? clause)
-                        (for-each
-                          (lambda (term)
-                            (for-each
-                              (lambda (alias)
-                                (unless (hashtable-contains? env alias)
-                                  (hashtable-set! env alias "")
-                                  (warningf 'create-snippets "unrequested terminal name ~s" alias)))
-                              (terminal-alias* term)))
-                          (terminal-clause-term* clause))
-                        (let ([alias* (nonterminal-aliases clause)])
-                          (for-each
-                            (lambda (alias)
-                              (unless (hashtable-contains? env alias)
-                                (hashtable-set! env alias "dummy")
-                                (warningf 'create-snippets "unrequested nonterminal name ~s" alias)))
-                            alias*))))
-                  (section-clause* section)))
-              (grammar-section* grammar))
-            (let ([nonterminal-snippets (make-alias-hashtable)])
+                  (lambda (alias)
+                    (let ([a (hashtable-cell env alias #f)])
+                      (unless (cdr a)
+                        (set-cdr! a anchor))))
+                  alias*))
+              (syntax-case directive ()
+                [(?anchor-here anchor alias ...)
+                 (and (eq? #'?anchor-here 'anchor-here) (string? #'anchor) (andmap symbol? #'(alias ...)))
+                 (begin
+                   (record-anchor! #'anchor #'(alias ...))
+                   snippet-request*)]
+                [(?request-snippet anchor alias ...)
+                 (and (eq? #'?request-snippet 'request-snippet) (string? #'anchor) (andmap symbol? #'(alias ...)))
+                 (let ([alias* #'(alias ...)])
+                   (record-anchor! #'anchor alias*)
+                   (let ([req (make-snippet-request #'anchor #'(alias ...))])
+                     (for-each
+                       (lambda (alias) (hashtable-set! snippet-request-ht alias req))
+                       alias*)
+                     (cons req snippet-request*)))]
+                [else (errorf 'create-snippets "malformed snippet request ~s" directive)]))
+            (let ([snippet-request* (reverse (fold-left process-directive '() directive*))])
+              ; see if any terminal aliases are left out
               (for-each
                 (lambda (section)
                   (for-each
                     (lambda (clause)
-                      (when (nonterminal-clause? clause)
+                      (for-each
+                        (lambda (term)
+                          (for-each
+                            (lambda (alias)
+                              (unless (hashtable-contains? env alias)
+                                (hashtable-set! env alias "")
+                                (warningf 'create-snippets "unrequested terminal name ~s" alias)))
+                            (terminal-alias* term)))
+                        (terminal-clause-term* clause)))
+                    (filter terminal-clause? (section-clause* section))))
+                (grammar-section* grammar))
+              ; (1) create a table mapping aliases to nonterminal records
+              ; (2) go through the snippet-requests in order looking for references
+              ;     in any of the request's aliases' nonterminal productions to
+              ;     aliases that have not been seen and add them and their
+              ;     transitive closure to the request.
+              (let ([nonterminal-ht (make-alias-hashtable)])
+                (for-each
+                  (lambda (section)
+                    (for-each
+                      (lambda (clause)
                         (let-values ([(primary-alias secondary-alias*)
                                       (let ([alias* (nonterminal-aliases clause)])
                                         (values (car alias*) (cdr alias*)))])
-                          (hashtable-set! nonterminal-snippets primary-alias
-                            (lambda ()
-                              (define (render-error c)
-                                (errorf 'create-snippets
-                                        "error occurred while rendering snippet: ~a"
-                                        (with-output-to-string (display-condition c))))
-                              (let ([prod* (nonterminal-clause-prod* clause)])
-                                (when (null? prod*) (errorf 'create-snippets "can't yet handle empty list of productions"))
-                                (let ([prod (car prod*)] [prod* (cdr prod*)])
-                                  (<tr> ()
-                                    (<td> () (render-alias primary-alias))
-                                    (<td> () (display-string "&xrarr;"))
-                                    (<td> () (render-production prod env)))
-                                  (for-each
-                                    (lambda (prod)
-                                      (<tr> ()
-                                        (<td> () (void))
-                                        (<td> () (html-text "|"))
-                                        (<td> () (render-production prod env))))
-                                    prod*)))))
-                          (for-each
-                            (lambda (secondary-alias)
-                              (hashtable-set! nonterminal-snippets secondary-alias
-                                (lambda ()
-                                  (<tr> ()
-                                    (<td> () (render-alias secondary-alias))
-                                    (<td> () (display-string "&xrarr;"))
-                                    (<td> () (render-alias/link primary-alias env))))))
-                            secondary-alias*))))
-                    (section-clause* section)))
+                          (hashtable-set! nonterminal-ht primary-alias clause)
+                          (let ([link-prod (make-production #f (list (make-id-elt primary-alias)) #'void)])
+                            (for-each
+                              (lambda (secondary-alias)
+                                (hashtable-set! nonterminal-ht secondary-alias 
+                                  (make-nonterminal-clause
+                                    (clause-id clause) (list secondary-alias) '() '()
+                                    (list link-prod))))
+                              secondary-alias*))))
+                      (filter nonterminal-clause? (section-clause* section))))
+                  (grammar-section* grammar))
+                (for-each
+                  (lambda (req)
+                    (let ([worklist (snippet-request-alias* req)] [ralias* '()])
+                      (let loop ()
+                        (if (null? worklist)
+                            (snippet-request-alias*-set! req (reverse ralias*))
+                            (let ([alias (car worklist)])
+                              (set! worklist (cdr worklist))
+                              (set! ralias* (cons alias ralias*))
+                              (for-each
+                                (lambda (prod)
+                                  (define (handle-elt x)
+                                    (cond
+                                      [(sep-elt? x) (handle-elt (sep-elt-elt x))]
+                                      [(opt-elt? x) (handle-elt (opt-elt-elt x))]
+                                      [(kleene-elt? x) (handle-elt (kleene-elt-elt x))]
+                                      [(constant-elt? x) (void)]
+                                      [(id-elt? x)
+                                       (let ([alias (syntax->datum (id-elt-id x))])
+                                         (unless (hashtable-contains? env alias)
+                                           (hashtable-set! env alias (snippet-request-anchor req))
+                                           (hashtable-set! snippet-request-ht alias req)
+                                           (set! worklist (cons alias worklist))))]
+                                      [else (errorf 'handle-elt "unexpected elt ~s" x)]))
+                                  (for-each handle-elt (reverse (production-elt* prod))))
+                                (nonterminal-clause-prod*
+                                  (or (hashtable-ref nonterminal-ht alias #f)
+                                      (errorf 'create-snippets
+                                              "unrecognized nonterminal name ~s from snippet request"
+                                              alias))))
+                              (loop))))))
+                  snippet-request*))
+              ; see if any nonterminal aliases are left out
+              (for-each
+                (lambda (section)
+                  (for-each
+                    (lambda (clause)
+                      (for-each
+                        (lambda (alias)
+                          (unless (hashtable-contains? env alias)
+                            (hashtable-set! env alias "")
+                            (warningf 'create-snippets "unrequested nonterminal name ~s" alias)))
+                        (nonterminal-aliases clause)))
+                    (filter nonterminal-clause? (section-clause* section))))
                 (grammar-section* grammar))
-              (snippets
-                (fold-right
-                  (lambda (req snippet*)
-                    (syntax-case req ()
-                      [(?anchor-here anchor alias ...)
-                       (eq? #'?anchor-here 'anchor-here)
-                       snippet*]
-                      [(?request-snippet anchor alias ...)
-                       (eq? #'?request-snippet 'request-snippet)
-                       (cons
+              ; create a thunk for each nonterminal that prints one row for each of the nonterminals productions
+              (let ([nonterminal-snippets (make-alias-hashtable)])
+                (for-each
+                  (lambda (section)
+                    (for-each
+                      (lambda (clause)
+                        (when (nonterminal-clause? clause)
+                          (let-values ([(primary-alias secondary-alias*)
+                                        (let ([alias* (nonterminal-aliases clause)])
+                                          (values (car alias*) (cdr alias*)))])
+                            (hashtable-set! nonterminal-snippets primary-alias
+                              (lambda ()
+                                (define (render-error c)
+                                  (errorf 'create-snippets
+                                          "error occurred while rendering snippet: ~a"
+                                          (with-output-to-string (display-condition c))))
+                                (let ([prod* (nonterminal-clause-prod* clause)])
+                                  (when (null? prod*) (errorf 'create-snippets "can't yet handle empty list of productions"))
+                                  (let ([prod (car prod*)] [prod* (cdr prod*)])
+                                    (<tr> ()
+                                      (<td> () (render-alias primary-alias))
+                                      (<td> () (display-string "&xrarr;"))
+                                      (<td> () (render-production prod env)))
+                                    (for-each
+                                      (lambda (prod)
+                                        (<tr> ()
+                                          (<td> () (void))
+                                          (<td> () (html-text "|"))
+                                          (<td> () (render-production prod env))))
+                                      prod*)))))
+                            (for-each
+                              (lambda (secondary-alias)
+                                (hashtable-set! nonterminal-snippets secondary-alias
+                                  (lambda ()
+                                    (<tr> ()
+                                      (<td> () (render-alias secondary-alias))
+                                      (<td> () (display-string "&xrarr;"))
+                                      (<td> () (render-alias/link primary-alias env))))))
+                              secondary-alias*))))
+                      (section-clause* section)))
+                  (grammar-section* grammar))
+                ; put together groups of snippets into formatted tables and provide
+                ; it back to the parser
+                (snippets
+                  (map (lambda (req)
                          (with-output-to-string
                            (lambda ()
                              (<table> ()
@@ -864,10 +932,8 @@
                                                "unrecognized nonterminal name ~s from snippet request"
                                                alias))
                                      (th)))
-                                 #'(alias ...)))))
-                         snippet*)]))
-                  '()
-                  requested-snippets))))))
+                                 (snippet-request-alias* req))))))
+                       snippet-request*)))))))
       (module (parse-grammar)
         (define parse-elt
           (lambda (elt)
