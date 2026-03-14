@@ -1490,12 +1490,12 @@ each parameter pattern to the corresponding pieces of the input is the type of
 the corresponding part of the declared type's structure.
 
 The return type of the constructor is always `[]`.
-Any attempt to return another type of value using `return expression;` where the
-type of `expression` is something other than `[]`, is a static error.
+Any attempt to return another type of value using `return` *expr*`;` where the
+type of *expr* is something other than `[]`, is a static error.
 
 ## Circuit definitions
 
-The basic operational element in Compact is the `circuit`.
+The basic operational element in Compact is the *circuit*.
 This corresponds closely to a function in most languages but is designed
 to be compilable into a zero-knowledge circuit.
 The key limitation of circuits relative to functions in most languages is
@@ -1509,7 +1509,7 @@ Named circuit definitions have the following syntax:
 
 @(request-snippet circuit-definition)
 
-A circuit definition binds `function-name` to a circuit with the given parameters,
+A circuit definition binds *function-name* to a circuit with the given parameters,
 type, and body.
 The optional `export` modifier indicates that the circuit binding should
 be exported from the enclosing module or the program itself, if the circuit
@@ -1517,7 +1517,7 @@ is defined outside of any module.
 The optional `pure` modifier indicates that the
 [circuit is pure](#pure-and-impure-circuits).
 
-If any generic parameters are present (`gparams` is present and is nonempty),
+If any generic parameters are present (*gparams* is present and is nonempty),
 the circuit is [generic][#generic-parameters-and-arguments] and must be specialized
 (provided with generic arguments) at the point of call.
 
@@ -1527,7 +1527,7 @@ to be bound to selected pieces of the argument values.
 In the simplest case, a pattern is just an identifier and is bound to the argument
 value as a whole.
 The bindings established by the parameters are visible within (and only within)
-the `block` that constitutes the body of the circuit.
+the *block* that constitutes the body of the circuit.
 Each parameter must be explicitly typed, and at the point of every call to the
 circuit, the type of the corresponding argument expression must be a subtype of
 that type.
@@ -1550,7 +1550,7 @@ Every named circuit's return type must be explicitly declared, and it is a
 static error if the circuit can return a value that is not a subtype of that
 type.
 
-The body is evaluated each time the circuit it is called.
+The body is evaluated each time the circuit is called.
 
 ### Pure and impure circuits
 
@@ -1581,20 +1581,20 @@ Compact program by the Compact compiler.
 
 ## Blocks
 
-A `block` is a group of statements enclosed in braces:
+A *block* is a group of statements enclosed in braces:
 
 @(request-snippet block)
 
 A block can be used in place of a single statement anywhere a single statement
 is allowed, which is useful for allowing multiple statements to be evaluated by the
-`then` and `else` parts of an `if` statement or the body of a `for`.
+"then" and "else" parts of an `if` statement or the body of a `for` statement.
 
 The body of every circuit definition and the body of the constructor, if any,
 is always a block.
 The right-hand side of the arrow in an anonymous circuit can be either a block
 or an expression.
 
-The statements within a block occupy a nested scope: `const` bindings created by
+The statements within a block occupy a nested scope: variable bindings created by
 `const` statements within the block are not visible outside the block, and they can
 shadow identifier bindings with the same names that exist outside the block.
 
@@ -1610,49 +1610,46 @@ The syntax of Compact statements is summarized by the following grammar snippet:
 
 The snippet shows that a statement (`stmt`) is either a one-armed `if` expression
 or some other kind of statement (`stmt0`).
-This structure is used to enforce the restriction that the *then* part of a
+This structure is used to enforce the restriction that the "then" part of a
 two-armed cannot be a one-armed `if` expression.
-This is often left ambiguous in the grammar, with a separate note to say
-that the ambiguity is resolved by associating an *else* part with the closest
+This is often left ambiguous in a language grammar, with a separate note to say
+that the ambiguity is resolved by associating each "else" part with the closest
 enclosing `if` expression, but we prefer to make the constraint explicit in
 the grammar and avoid any ambiguity.
 
 The first kind of `stmt0` is `expr-seq`.
 An `expr-seq`, or *expression sequence*, is a comma separated sequence of one
 or more expressions to be evaluated in sequence.
-This simply means that any expression or comma-separated sequence also qualifies
-as a statement.
+This simply means that any expression or comma-separated sequence of expressions
+also qualifies as a statement.
 Expression sequences are described more fully in
 (their own section)[expression-sequences].
 
 The remaining subsections of this section describe each of the other kinds of
-statement.
+statements.
 
 Statements either do not have a value or (in the case of expression sequences
-serving as statements) their value is ignored.
+serving as statements) the type and value are ignored.
 Thus it is not necessary to talk about the type of a statement.
 Nevertheless, each statement has typing rules that must be followed, such as that
-the type of the test expression of an `if` expression must be `Boolean`.
+the type of the test expression of an `if` statement must be `Boolean`.
 
 ### `const` statements
 
 `const` statements create local variable bindings.
 Every `const` statement takes the following form:
 
-```compact
-const cbindings
-```
+`const` *cbinding* `,` ⋯¹ `,` *cbinding*  `;`
 
-where `cbindings` is a comma-separated sequence of one or more `cbinding` subforms
-in the syntax specified by the following grammar snippet:
+where each *cbinding* takes the following form:
 
 @(request-snippet cbinding)
 
-A `const` statement is typed by typing each of its `cbinding` subforms.
-A `cbinding` subform is typed by typing the expression on the right-hand side
+A `const` statement is typed by typing each of its *cbinding* subforms.
+A *cbinding* subform is typed by typing the expression on the right-hand side
 of the `=`.
-If a type `T` is included on the left-hand side, the type of the expression
-must be a subtype of `T`, otherwise it is a static error.
+If a type *T* is declared on the left-hand side, the type of the expression
+must be a subtype of *T*, otherwise it is a static error.
 It is also a static error if the pattern implies a different structure from
 the type of the expression.
 For example, it is a static error if the pattern implies that the expression's
@@ -1699,7 +1696,7 @@ circuit foo(a: Uint<16>): Field {
 }
 ```
 
-Similarly, the reference to `x` in the first `cbinding` of the `const`
+Similarly, the reference to `x` in the first *cbinding* of the `const`
 statement below is also a static error.
 
 ```compact
@@ -1707,21 +1704,20 @@ const y = x, x = 7;
 }
 ```
 
-A `const` statement is evaluated by evaluating the `cbinding` subforms in order
-so that the variables given values by each `cbinding` is available to the
-cbindings that follow.
+A `const` statement is evaluated by evaluating the *cbinding* subforms in order
+so that the variables given values by each *cbinding* are available to be
+referenced by the cbindings that follow.
 
-The evaluation of each `cbinding` involves evaluating the expression
-on the right-hand side of the `=` and then giving values to identifiers
-in the pattern `p` on the left-hand side to the value `v` of the
-expression as described earlier in
-(Patterns and destructuring)[patterns-and-destructuring].
+The evaluation of each *cbinding* involves determining the value *v* of the
+expression on the right-hand side of the `=`, then giving values to identifiers
+in the pattern *p* on the left-hand side to the corresponding pieces of *v*
+as described earlier in (Patterns and destructuring)[patterns-and-destructuring].
 
 Any variable bound by `const` may not be reused within a block, although a
 `const` binding in a nested block might [shadow it](#identifiers-bindings-and-scope).
 Variables are immutable, although the same variable might take on different values
 at different times if is contained within a block of code that is evaluated more
-than once, such as would be the case for the body of a `circuit` that is called
+than once, such as would be the case for the body of a circuit that is called
 more than once.
 
 ### `if` statements
