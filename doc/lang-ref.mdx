@@ -2197,18 +2197,18 @@ circuit foo(): Uint<16> {
 This is treated exactly as if the numeric literal appeared in place of the
 reference to `N` in the source code of the program.
 
-It is a static error if the number `n` denoted by a numeric literal exceeds the
+It is a static error if the number *n* denoted by a numeric literal exceeds the
 maximum unsigned value and the maximum field value.
 
-If `n` does not exceed the maximum representable unsigned value, the literal's
-type is `Uint<0..k>`, `k = n + 1`, and its value is the unsigned integer `n`.
+If *n* does not exceed the maximum representable unsigned value, the literal's
+type is `Uint<0..`*k*`>`, *k* `=` *n*+1, and its value is the unsigned integer *n*.
 
-If `n` exceeds the maximum representable unsigned value but not the
+If *n* exceeds the maximum representable unsigned value but not the
 maximum representable field value, the literal must be directly cast to
-`Field`, i.e., `<numeric literal> as Field`.
+`Field`, i.e., *n* `as Field`.
 Otherwise it is a static error.
-The type of `<numeric literal> as Field` is `Field`, and its value is the
-field value `n`.
+The type of *n* `as Field` is `Field`, and its value is the
+field value *n*.
 
 __String literals__ can be either simple string literals or `pad` expressions.
 String literals produce byte vectors; Compact has no dedicated String type.
@@ -2216,53 +2216,46 @@ String literals produce byte vectors; Compact has no dedicated String type.
 Simple string literals use TypeScript string literal syntax.
 They can be enclosed in either single (`'`) or double (`"`) quotes, and they can
 contain escaped characters.
-The length `n` of a simple string literal is the length of its UTF-8 encoding.
-The static type of a string literal is `Bytes<n>`, and its value is a
-byte vector containing its UTF-8 encoding.
+The length *n* of a simple string literal is the length of its UTF-8 encoding.
+The static type of a string literal of length *n* is `Bytes<`*n*`>`, and its
+value is a byte vector containing its UTF-8 encoding.
 
-A `pad` expression `pad(n, s)` is also a string literal, where `pad` is a reserved
-word, `n` is a natural number literal, and `s` is a simple string literal whose
-length must be less than or equal to `n`.
-The static type of a padded string literal `pad(n, s)` is `Bytes<n>`, and its
-value is a byte vector containing the UTF-8 encoding of `s` followed by `0`
-bytes up to the padded length `n`.
+A `pad` expression `pad(`*n*`,` *s*`)` is also a string literal, where `pad` is a reserved
+word, *n* is a natural number literal, and *s* is a simple string literal whose
+length must be less than or equal to *n*.
+The static type of a padded string literal `pad(`*n*`,` *s*`)` is `Bytes<`*n*`>`, and its
+value is a byte vector containing the UTF-8 encoding of *s* followed by `0`
+bytes up to the padded length *n*.
 
 ### Default values of a type
 
-Every Compact type and ledger-state type has a default value.
-
-The expression `default<T>`, where `T` is a Compact type or a ledger-state type,
-has static type `T`. It evaluates to the default value of that type.
-
-Note that default value expressions can have ledger-state types.
-
-Every type in Compact has a *default value* of that type.  The default values
-are as follows:
+The expression `default<`*T*`>`, where *T* is a Compact type or a ledger-state type,
+has static type *T* and evaluates to the default value of that type as follows:
 
 - `Boolean`: the value of the literal `false`
-- `Uint<0..n>` and `Uint<n>`: `0`
+- `Uint<0..`*n*`>` and `Uint<`*n*`>`: `0`
 - `Field`: `0`
-- `[T, `⋯`]` where `T`, ⋯ is a sequence of zero or more types: the tuple with
-  the corresponding length, each of the default value of the corresponding type
-- `Bytes<n>`: the byte vector of length `n` with all zero bytes
-- `Opaque<"string">`: an empty string, i.e., `""`
-- `Opaque<"Uint8Array">`: a zero-length `Uint8Array`, i.e., `new Uint8Array(0)`
-- structure types: the struct with all fields set to the default value of their
-  type
-- enumeration types: the first value listed in the declaration
+- `[`*T<sub>1</sub>*`, `⋯`, `*T<sub>n</sub>*`]`: a tuple with *n* elements,
+  each of which is the default value of the corresponding type *T<sub>i</sub>*
+- `Vector<`*n*`, `*T*`>`: a vector with *n* elements, each of which is
+  the default value of type *T*.
+- `Bytes<`*n*`>`: a byte vector of length *n*, each element of which is `0`.
+- `Opaque<"string">`: a zero-length string
+- `Opaque<"Uint8Array">`: a zero-length `Uint8Array`
+- Structure types: a struct with each element set to the default value of its type
+- Enumeration types: the value of *E*`.`*id* where *E* is the name of the enumeration
+  type and *id* is the first element
 - alias types: the default value of the underlying type
-- `Counter`: `0`
-- `Set<T>`, for any Compact type `T`: an empty set
-- `Map<K, T>`, for any Compact types `K` and `T`: an empty map
-- `Map<K, V>`, for any Compact type `K` and ledger-state type `V`: an empty map
-- `List<T>`, for any Compact type `T`: an empty list
-- `MerkleTree<n, T>`, for a compile time integer `1 < n <= 32`, and any Compact
-  type `T`: an empty Merkle tree
-- `HistoricMerkleTree<n, T>`, for a compile time integer `1 < n <= 32`, and any
-  Compact type `T`: an empty Merkle tree
+- `Counter`: a Counter initialized to `0`
+- `Set<`*T*`>`: an empty Set
+- `Map<`*K*`, `*T*`>`: an empty Map
+- `List<`*T*`>`: an empty List
+- `MerkleTree<`*n*`, `*T*`>`: an empty Merkle tree
+- `HistoricMerkleTree<`*n*`, `*T*`>`: an empty historic Merkle tree
 
-Default is not defined for contract types and `Kernel` type (which is defined
-in `CompactStandardLibrary`).
+Default values are not defined for contract types or the `CompactStandardLibrary`
+`Kernel` type, so it is a static error if *T* in `default<`*T*`>` is one of
+these types.
 
 ### Variable references
 
