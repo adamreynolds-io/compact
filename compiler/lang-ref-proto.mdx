@@ -2045,32 +2045,37 @@ Each call to a circuit (or constructor) associates a new set of values with each
 variable bound by the circuit's (or constructor's) parameters, and each block
 in the circuit (or constructor) associates a new set of values with each of the
 `const` bindings created within the block.
-The value of each variable reference is the value associated with the variable
-by the current activation.
+The value of each variable reference is the value currently associated with the
+variable.
 
 ### Conditional expressions
 
-Compact supports conditional expressions of the form `e0 ? e1 : e2` where `e0`,
-`e1`, and `e2` are expressions.
+Compact supports conditional expressions of the form
 
-Conditional expressions require the type of `e0` to be `Boolean`.  The types of
-`e1` and `e2` must be in the subtype relation.  That is, the type of
-`e1` is a subtype of the type of `e2` or the type of `e2` is a subtype of
-the type of `e1`.
+*e<sub>0</sub>* `?` *e<sub>1</sub>* `:` *e<sub>2</sub>*
 
-The type of the entire expression is the type of `e2` if `e1` is a subtype of
-`e2` and the type of `e1` if `e2` is a subtype of `e1`.
+where *e<sub>0</sub>*, *e<sub>1</sub>*, and *e<sub>2</sub>* are expressions.
 
-Conditional expressions are evaluated by first evaluating `e0`.  Then, the
-value of that expression determines which of the other subexpressions is
+The type of *e<sub>0</sub>* must be `Boolean`.
+The types of *e<sub>1</sub>* and *e<sub>2</sub>* must be in a subtype relation.
+That is, the type of *e<sub>1</sub>* must be a subtype of the type of *e<sub>2</sub>*,
+or the type of *e<sub>2</sub>* must be a subtype of the type of *e<sub>1</sub>*.
+
+The type of the entire expression is the type of *e<sub>2</sub>* if *e<sub>1</sub>*
+is a subtype of *e<sub>2</sub>* and the type of *e<sub>1</sub>* if *e<sub>2</sub>*
+is a subtype of *e<sub>1</sub>*.
+
+Conditional expressions are evaluated by first evaluating *e<sub>0</sub>*.
+The value *v* of that expression determines which of the other subexpressions is
 evaluated:
 
-- if the value of `e0` is `true`, then `e1` is evaluated and its value is the
+- if *v* is `true`, then *e<sub>1</sub>* is evaluated and its value is the
   value of the entire expression
-- if the value of `e0` is `false`, then `e2` is evaluated and its value is the
+- if *v* is `false`, then *e<sub>2</sub>* is evaluated and its value is the
   value of the entire expression
 
-The evaluation rules ensure that only one of `e1` and `e2` is evaluated.
+The evaluation rules ensure that only one of *e<sub>1</sub>* and *e<sub>2</sub>*
+is evaluated.
 
 ### Relational comparison expressions
 
