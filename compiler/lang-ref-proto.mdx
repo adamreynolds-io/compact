@@ -1610,8 +1610,8 @@ The syntax of Compact statements is summarized by the following grammar snippet:
 
 @(request-snippet stmt stmt0)
 
-The snippet shows that a statement (`stmt`) is either a one-armed `if` expression
-or some other kind of statement (`stmt0`).
+The snippet shows that a statement (*stmt*) is either a one-armed `if` expression
+or some other kind of statement (*stmt<sub>0</sub>*).
 This structure is used to enforce the restriction that the "then" part of a
 two-armed cannot be a one-armed `if` expression.
 This is often left ambiguous in a language grammar, with a separate note to say
@@ -1619,8 +1619,8 @@ that the ambiguity is resolved by associating each "else" part with the closest
 enclosing `if` expression, but we prefer to make the constraint explicit in
 the grammar and avoid any ambiguity.
 
-The first kind of `stmt0` is `expr-seq`.
-An `expr-seq`, or *expression sequence*, is a comma separated sequence of one
+The first kind of *stmt<sub>0</sub>* is *expr-seq*`;`.
+An *expr-seq*, or *expression sequence*, is a comma separated sequence of one
 or more expressions to be evaluated in sequence.
 This simply means that any expression or comma-separated sequence of expressions
 also qualifies as a statement.
@@ -1798,7 +1798,7 @@ Iteration can also be accomplished via
 A `return` statement can be used to exit from the closest enclosing
 [anonymous circuit](#circuit-and-witness-calls), if any, or otherwise from
 the enclosing constructor or named circuit, and to return to the caller either
-an explicit return value, i.e., the value of [`expr-seq`](#expression-sequences)
+an explicit return value, i.e., the value of [*expr-seq*](#expression-sequences)
 in this form of `return`:
 
 `return` *expr-seq*`;`
