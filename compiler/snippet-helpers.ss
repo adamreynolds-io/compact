@@ -17,8 +17,7 @@
 
 (library (snippet-helpers)
   (export get-requested-snippets insert-requested-snippets)
-  (import (chezscheme)
-          (state-case))
+  (import (chezscheme))
 
   (define who)
   (define anchor-ht)
@@ -67,13 +66,18 @@
       (define (seen-at i)
         (case (getc i)
           [(#\()
-           (found-request
-             (guard (c [else (errorf who
-                                     "error reading @ form on line ~d: ~a"
-                                     line-number
-                                     (with-output-to-string
-                                       (lambda () (display-condition c))))])
-               (read (open-input-string (substring line i n)))))]
+           (let ([x (guard (c [else (errorf who
+                                            "error reading @ form on line ~d: ~a"
+                                            line-number
+                                            (with-output-to-string
+                                              (lambda () (display-condition c))))])
+                      (read (open-input-string (substring line i n))))])
+             (syntax-case x ()
+               [(?parameter p)
+                (eq? (datum ?parameter) 'parameter)
+                ; this one is not relevant for this stage
+                (found-nada)]
+               [else (found-request x)]))]
           [else (found-nada)]))
       (define (seen-backquote i)
         (if (fx= i 3)
@@ -137,6 +141,58 @@
                             [else (loop line-number^)]))))
                     (lambda () (f current-anchor line-number))))))))))
   
+  (define (apply-formatting line line-number)
+    (define who 'apply-formatting)
+    (let ([ip (open-input-string line)])
+      (with-output-to-string
+        (lambda ()
+          (define (s0)
+            (let ([c (read-char ip)])
+              (unless (eof-object? c)
+                (case c
+                  [(#\@) (seen-at)]
+                  [else (write-char c) (s0)]))))
+          (define (seen-at)
+            (case (peek-char ip)
+              [(#\()
+               (let ([x (guard (c [else (errorf who
+                                                "error reading @ form on line ~d: ~a"
+                                                line-number
+                                                (with-output-to-string
+                                                  (lambda () (display-condition c))))])
+                          (read ip))])
+                 (syntax-case x ()
+                   [(?parameter p)
+                    (eq? (datum ?parameter) 'parameter)
+                    (case #'p
+                      [(max-field)
+                       (let ()
+                         (import (only (field) max-field))
+                         (write (max-field)))]
+                      [(max-unsigned)
+                       (let ()
+                         (import (only (langs) max-unsigned))
+                         (write (max-unsigned)))]
+                      [(field-bytes)
+                       (let ()
+                         (import (only (langs) field-bytes))
+                         (write (field-bytes)))]
+                      [(max-bytes/vector-length)
+                       (let ()
+                         (import (only (langs) max-bytes/vector-length))
+                         (write (max-bytes/vector-length)))]
+                      [else (errorf who
+                                    "unrecognized parameter in @~s on line ~d"
+                                    x
+                                    line-number)])]
+                   [else (errorf who
+                                 "unrecognized command @~s on line ~d"
+                                 x
+                                 line-number)]))
+               (s0)]
+              [else (write-char #\@) (s0)]))
+          (s0)))))
+
   (define (insert-requested-snippets snippet* proto-file output-file)
     (define (put-line op line) (fprintf op "~a\n" line))
     (fluid-let ([who 'insert-requested-snippets]
@@ -182,6 +238,6 @@
                               [(code-end? line) (put-line op line) (outer snippet* line-number^)]
                               [else (put-line op line) (inner line-number^)]))))
                       (lambda ()
-                        (put-line op line)
+                        (put-line op (apply-formatting line line-number))
                         (outer snippet* line-number))))))))))))
 )

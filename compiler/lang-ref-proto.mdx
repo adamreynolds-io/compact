@@ -3154,13 +3154,13 @@ Note that other `Opaque` types are currently not supported.
 Compact compiler version 1.0 limits certain datatype values and sizes:
 
 - The maximum value of a `Field` value is
-52435875175126190479447740508185965837690552500527637822603658699938581184512.
+@(parameter max-field).
 This value is dictated by the scalar field size of the ZK proving system.
 - The maximum value of a `Uint` value is
-452312848583266388373324160190187140051835877600158453279131187530910662655.
-This value is `(256^k)-1` where `k` is the number of bytes (31) that fits in
+@(parameter max-unsigned).
+This value is 256<sup>k</sup>-1 where *k* is the number of bytes (@(parameter field-bytes)) that fits in
 a `Field`.
-- The maximum length of a vector or byte-vector is `2^24 = 16777216`.
+- The maximum length of a vector or byte-vector is @(parameter max-bytes/vector-length).
 This value is chosen as a reasonable upper bound that helps prevent the compiler
 from looping indefinitely on programs that operate on excessively large vector
 and byte-vector types.
