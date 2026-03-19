@@ -80597,6 +80597,34 @@ groups than for single tests.
         "});"
         ))
     )
+
+  (test
+    '(
+      "import CompactStandardLibrary;"
+      "ledger F1: Counter;"
+      "circuit foo1<#S, #E>(): Uint<64> {"
+      "  for (const i of S..E) {"
+      "    F1 += i;"
+      "  }"
+      "  return F1;"
+      "}"
+      "ledger F2: Counter;"
+      "circuit foo2<#S, #N>(): Uint<64> {"
+      "  fold((i, x) => (F2 += i, i + 1 as Uint<16>), S as Uint<16>, default<Vector<N, Field>>);"
+      "  return F2;"
+      "}"
+      "export circuit foo(): [Uint<64>, Uint<64>] {"
+      "  return [foo1<3, 10>(), foo2<3, 7>()];"
+      "}"
+      )
+    (stage-javascript
+      `(
+        "test('check 1', () => {"
+        "  const [C, Ctxt] = startContract(contractCode, {}, 0);"
+        "  expect(C.circuits.foo(Ctxt).result).toEqual([42n, 42n]);"
+        "});"
+        ))
+    )
 )
 
 (run-javascript)
