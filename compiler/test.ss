@@ -64441,7 +64441,7 @@ groups than for single tests.
   (test
     '(
       "struct S { x: Uint<16>, y: Uint<32> }"
-      "circuit sumStruct({x, y}: S): Field {"
+      "circuit sumStruct({x, y}: S): Uint<64> {"
       "  return x + y;"
       "}"
       )
@@ -64451,7 +64451,7 @@ groups than for single tests.
   (test
     '(
       "struct S { x: Uint<16>, y: Uint<32> }"
-      "circuit sumStruct({y, x}: S): Field {"
+      "circuit sumStruct({y, x}: S): Uint<64> {"
       "  return x + y;"
       "}"
       )
@@ -64461,7 +64461,7 @@ groups than for single tests.
   (test
     '(
       "struct S { x: Uint<16>, y: Uint<32> }"
-      "circuit sumStruct({x: a, y}: S): Field {"
+      "circuit sumStruct({x: a, y}: S): Uint<64> {"
       "  return a + y;"
       "}"
       )
@@ -64471,7 +64471,7 @@ groups than for single tests.
   (test
     '(
       "struct S { x: Uint<16>, y: Uint<32> }"
-      "circuit sumTupleStruct([{x: a1, y: b1}, {x: a2, y: b2}]: [S, S]): Field {"
+      "circuit sumTupleStruct([{x: a1, y: b1}, {x: a2, y: b2}]: [S, S]): Uint<64> {"
       "  return a1 + b1 + a2 + b2;"
       "}"
       )
@@ -64481,7 +64481,7 @@ groups than for single tests.
   (test
     '(
       "struct S { x: Uint<16>, y: Uint<32> }"
-      "circuit sumSomeYs([{y: b1}, , {y: b3}]: [S, S, S]): Field {"
+      "circuit sumSomeYs([{y: b1}, , {y: b3}]: [S, S, S]): Uint<64> {"
       "  return b1 + b3;"
       "}"
       )
@@ -64491,19 +64491,19 @@ groups than for single tests.
   (test
     '(
       "struct S { x: Uint<16>, y: Uint<32> }"
-      "circuit sumStruct({x, y}: [Field, Field]): Field {"
+      "circuit sumStruct({x, y}: [Uint<16>, Uint<32>]): Uint<64> {"
       "  return x + y;"
       "}"
       )
     (oops
       message: "~a:\n  ~?"
-      irritants: '("testfile.compact line 2 char 19" "expected structure type, received ~a" ("[Field, Field]")))
+      irritants: '("testfile.compact line 2 char 19" "expected structure type, received ~a" ("[Uint<16>, Uint<32>]")))
     )
 
   (test
     '(
       "struct S { x: Uint<16>, y: Uint<32> }"
-      "circuit sumSomeYs([{y: b1}, , , {y: b3}]: [S, S, S]): Field {"
+      "circuit sumSomeYs([{y: b1}, , , {y: b3}]: [S, S, S]): Uint<64> {"
       "  return b1 + b3;"
       "}"
       )
@@ -64515,7 +64515,7 @@ groups than for single tests.
   (test
     '(
       "struct S { x: Uint<16>, y: Uint<32> }"
-      "circuit sumSomeYs([{y: b1}, , {z: b3}]: [S, S, S]): Field {"
+      "circuit sumSomeYs([{y: b1}, , {z: b3}]: [S, S, S]): Uint<64> {"
       "  return b1 + b3;"
       "}"
       )
@@ -64527,7 +64527,7 @@ groups than for single tests.
   (test
     '(
       "struct S { x: Uint<16>, y: Uint<32> }"
-      "circuit sumSomeYs([{y: b1,}, , {y: b3,},]: [S, S, S]): Field {"
+      "circuit sumSomeYs([{y: b1,}, , {y: b3,},]: [S, S, S]): Uint<64> {"
       "  return b1 + b3;"
       "}"
       )
@@ -80935,6 +80935,127 @@ groups than for single tests.
         ))
     )
 
+  ; lang-ref
+  (test
+    '(
+      "import CompactStandardLibrary;"
+      ""
+      "ledger fld: Map<Boolean, Map<Field, Counter>>;"
+      ""
+      "export circuit initNestedMap(b: Boolean): [] {"
+      "  fld.insert(disclose(b), default<Map<Field, Counter>>);"
+      "}"
+      ""
+      "export circuit initNestedCounter(b: Boolean, n: Field): [] {"
+      "  fld.lookup(b).insert(disclose(n), default<Counter>);"
+      "}"
+      ""
+      "export circuit incrementNestedCounter1(b: Boolean, n: Field, k: Uint<16>): [] {"
+      "  fld.lookup(b).lookup(n).increment(disclose(k));"
+      "}"
+      ""
+      "export circuit incrementNestedCounter2(b: Boolean, n: Field, k: Uint<16>): [] {"
+      "  fld.lookup(b).lookup(n) += disclose(k);"
+      "}"
+      "export circuit readNestedCounter1(b: Boolean, n: Field): Uint<64> {"
+      "  return fld.lookup(b).lookup(n).read();"
+      "}"
+      ""
+      "export circuit readNestedCounter2(b: Boolean, n: Field): Uint<64> {"
+      "  return fld.lookup(b).lookup(n);"
+      "}"
+      )
+    (stage-javascript
+      `(
+        "test('check 1', () => {"
+        "  var [C, Ctxt] = startContract(contractCode, {}, 0);"
+        "  var t = C.circuits.initNestedMap(Ctxt, true);"
+        "  t = C.circuits.initNestedCounter(t.context, true, 7n);"
+        "  t = C.circuits.incrementNestedCounter1(t.context, true, 7n, 1n);"
+        "  t = C.circuits.incrementNestedCounter2(t.context, true, 7n, 2n);"
+        "  t = C.circuits.readNestedCounter1(t.context, true, 7n);"
+        "  expect(t.result).toEqual(3n);"
+        "  t = C.circuits.readNestedCounter2(t.context, true, 7n);"
+        "  expect(t.result).toEqual(3n);"
+        "});"
+        "test('check 2', () => {"
+        "  var [C, Ctxt] = startContract(contractCode, {}, 0);"
+        "  var t = C.circuits.initNestedMap(Ctxt, true);"
+        "  t = C.circuits.initNestedCounter(t.context, true, 7n);"
+        "  t = C.circuits.incrementNestedCounter1(t.context, true, 7n, 1n);"
+        "  t = C.circuits.incrementNestedCounter2(t.context, true, 7n, 2n);"
+        "  t = C.circuits.readNestedCounter1(t.context, true, 7n);"
+        "  expect(t.result).toEqual(3n);"
+        "  // lookup using an uninitialized Counter"
+        "  expect(() => C.circuits.readNestedCounter2(t.context, true, 8n)).toThrow(runtime.CompactError);"
+        "});"
+        "test('check 3', () => {"
+        "  var [C, Ctxt] = startContract(contractCode, {}, 0);"
+        "  var t = C.circuits.initNestedMap(Ctxt, true);"
+        "  t = C.circuits.initNestedCounter(t.context, true, 7n);"
+        "  t = C.circuits.incrementNestedCounter1(t.context, true, 7n, 1n);"
+        "  t = C.circuits.incrementNestedCounter2(t.context, true, 7n, 2n);"
+        "  // lookup using an uninitialized Counter"
+        "  expect(() => C.circuits.readNestedCounter1(t.context, true, 8n)).toThrow(runtime.CompactError);"
+        "});"
+        "test('check 4', () => {"
+        "  var [C, Ctxt] = startContract(contractCode, {}, 0);"
+        "  var t = C.circuits.initNestedMap(Ctxt, true);"
+        "  t = C.circuits.initNestedCounter(t.context, true, 7n);"
+        "  t = C.circuits.incrementNestedCounter1(t.context, true, 7n, 1n);"
+        "  // increment using an uninitialized Counter"
+        "  expect(() => C.circuits.incrementNestedCounter2(t.context, true, 8n, 2n)).toThrow(runtime.CompactError);"
+        "});"
+        "test('check 5', () => {"
+        "  var [C, Ctxt] = startContract(contractCode, {}, 0);"
+        "  var t = C.circuits.initNestedMap(Ctxt, true);"
+        "  t = C.circuits.initNestedCounter(t.context, true, 7n);"
+        "  // increment using an uninitialized Counter"
+        "  expect(() => C.circuits.incrementNestedCounter1(t.context, true, 8n, 1n)).toThrow(runtime.CompactError);"
+        "});"
+        "test('check 6', () => {"
+        "  var [C, Ctxt] = startContract(contractCode, {}, 0);"
+        "  var t = C.circuits.initNestedMap(Ctxt, true);"
+        "  t = C.circuits.initNestedCounter(t.context, true, 7n);"
+        "  t = C.circuits.incrementNestedCounter1(t.context, true, 7n, 1n);"
+        "  t = C.circuits.incrementNestedCounter2(t.context, true, 7n, 2n);"
+        "  t = C.circuits.readNestedCounter1(t.context, true, 7n);"
+        "  expect(t.result).toEqual(3n);"
+        "  // lookup using an uninitialized Map"
+        "  expect(() => C.circuits.readNestedCounter2(t.context, false, 7n)).toThrow(runtime.CompactError);"
+        "});"
+        "test('check 7', () => {"
+        "  var [C, Ctxt] = startContract(contractCode, {}, 0);"
+        "  var t = C.circuits.initNestedMap(Ctxt, true);"
+        "  t = C.circuits.initNestedCounter(t.context, true, 7n);"
+        "  t = C.circuits.incrementNestedCounter1(t.context, true, 7n, 1n);"
+        "  t = C.circuits.incrementNestedCounter2(t.context, true, 7n, 2n);"
+        "  // lookup using an uninitialized Map"
+        "  expect(() => C.circuits.readNestedCounter1(t.context, false, 7n)).toThrow(runtime.CompactError);"
+        "});"
+        "test('check 8', () => {"
+        "  var [C, Ctxt] = startContract(contractCode, {}, 0);"
+        "  var t = C.circuits.initNestedMap(Ctxt, true);"
+        "  t = C.circuits.initNestedCounter(t.context, true, 7n);"
+        "  t = C.circuits.incrementNestedCounter1(t.context, true, 7n, 1n);"
+        "  // insert using an uninitialized Map"
+        "  expect(() => C.circuits.incrementNestedCounter2(t.context, false, 7n, 2n)).toThrow(runtime.CompactError);"
+        "});"
+        "test('check 9', () => {"
+        "  var [C, Ctxt] = startContract(contractCode, {}, 0);"
+        "  var t = C.circuits.initNestedMap(Ctxt, true);"
+        "  t = C.circuits.initNestedCounter(t.context, true, 7n);"
+        "  // insert using an uninitialized Map"
+        "  expect(() => C.circuits.incrementNestedCounter1(t.context, false, 7n, 1n)).toThrow(runtime.CompactError);"
+        "});"
+        "test('check 10', () => {"
+        "  var [C, Ctxt] = startContract(contractCode, {}, 0);"
+        "  var t = C.circuits.initNestedMap(Ctxt, true);"
+        "  // insert using an uninitialized Map"
+        "  expect(() => C.circuits.initNestedCounter(t.context, false, 7n)).toThrow(runtime.CompactError);"
+        "});"
+        ))
+    )
 )
 
 (run-javascript)
