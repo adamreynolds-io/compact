@@ -22,7 +22,7 @@ use std::{fs, io};
 pub const COMPACT_VERSION: &str = "0.5.0";
 
 #[allow(dead_code)]
-pub const PREVIOUS_COMPACT_VERSION: &str = "0.3.0";
+pub const PREVIOUS_COMPACT_VERSION: &str = "0.4.0";
 
 #[allow(dead_code)]
 pub const LATEST_COMPACTC_VERSION: &str = "0.29.0";
