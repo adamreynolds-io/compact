@@ -2152,7 +2152,7 @@ has a specific structure type, so does the other.
 - **Enumeration types:**
   the values are equal if they are the same enumeration member.
 - **`Opaque` types:**
-  the values are equal if the runtime values are equal according to JavaScript's
+  the values are equal if the run-time values are equal according to JavaScript's
   strict equality (`===`) operator.
 
 Otherwise the values are not equal.
@@ -2937,7 +2937,7 @@ If, however, the value of *e* is false (the assertion fails), it is a dynamic
 error, i.e., the `assert` form halts computation of the enclosing top-level
 circuit or constructor with the message *msg*.
 
-Each assertion is checked at runtime and constrained in-circuit.
+Each assertion is checked at run time and constrained in-circuit.
 
 ### Explicit disclosure
 
@@ -3025,7 +3025,7 @@ More details are given in
 
 ## Run-time data representation
 
-The TypeScript type representing a Compact type is defined in [Representations
+The TypeScript represention of a Compact type is defined in [Representations
 in TypeScript](#representations-in-typescript).
 
 Compact represents values exactly as TypeScript represents values, i.e., as
@@ -3053,32 +3053,34 @@ Certain values to be stored in public state require size, length, and other
 properties to be maintained explicitly, because these properties cannot
 be determined solely from the JavaScript representation of the value.
 For this purpose, the `@midnight/compact-runtime` package provides explicit
-runtime types satisfying the `CompactType<T>` interface, where `T` is the
+run-time types satisfying the `CompactType<`*T*`>` interface, where `T` is the
 corresponding TypeScript type.
 This representation is *not* user-facing most of the time, except
 when replicating the behavior of the operations implemented
 in `@midnight/compact-runtime`.
 
-The following constructors can be used to create a `CompactType` instance
+The following types or constructors can be used to create a `CompactType` instance
 for a primitive type:
 
-- `Boolean` - `new CompactTypeBoolean()`
-- `Field` - `new CompactTypeField()`
-- `Uint<0..n>` - `new CompactTypeUnsignedInteger(n, length)`, where
-  `length` is the number of bytes required to store `n`
-- `Uint<n>` - as `Uint<0..(2 ** n) - 1>`
-- `Bytes<n>` - `new CompactTypeBytes(n)`
-- `Vector<n, T>` - `new CompactTypeVector(n, rt_T)`, where `rt_T` is the runtime
-  type of `T`
-- `Opaque<"String">` - `new CompactTypeString()`
-- `Opaque<"Uint8Array">` - `new CompactTypeUint8Array()`.
+- `Boolean` - `CompactTypeBoolean`
+- `Field` - `CompactTypeField`
+- `Uint<0..`*n*`>` - `new CompactTypeUnsignedInteger(`*n*`, `*length*`)`, where
+  *length* is the number of bytes required to store *n*
+- `Uint<`*n*`>` - same as `Uint<0..(2 ^ `*n*`)>`
+- `Bytes<`*n*`>` - `new CompactTypeBytes(`*n*`)`
+- `Vector<`*n*`, `*T*`>` - `new CompactTypeVector(`*n*`, `*rt_T*`)`, where *rt_T* is the run-time
+  type of *T*
+- `Opaque<"String">` - `CompactTypeString`
+- `Opaque<"Uint8Array">` - `CompactTypeUint8Array`
+- `JubjubPoint` - `CompactTypeJubjubPoint`.
+
 
 For program-defined types, structures are not currently easily
-constructed at runtime and require implementing `CompactType<T>`
+constructed at run time and require implementing `CompactType<`*T*`>`
 manually or using compiler internals.  Enumerations are exposed
-through `new CompactTypeEnum(maxValue, length)`, where `maxValue` is
-the maximum permissible integer assignable, and `length` its
-representation length in bytes (almost always 1).
+through `new CompactTypeEnum(`*maxValue*`, `*length*`)`, where *maxValue* is
+the maximum permissible integer assignable, and *length* its
+representation length in bytes (almost always `1`).
 
 ## TypeScript target
 
