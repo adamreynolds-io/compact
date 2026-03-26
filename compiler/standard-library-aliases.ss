@@ -32,7 +32,6 @@
       (degrade_to_transient . degradeToTransient)
       (upgrade_from_transient . upgradeFromTransient)
       (ec_add . ecAdd)
-      (ec_neg . ecNeg)
       (ec_mul . ecMul)
       (ec_mul_generator . ecMulGenerator)
       (hash_to_curve . hashToCurve)

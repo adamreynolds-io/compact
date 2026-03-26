@@ -201,7 +201,7 @@ export function ecAdd(a: JubjubPoint, b: JubjubPoint): JubjubPoint {
 }
 
 /**
- * The Compact builtin `ec_neg` function
+ * The Compact builtin `ecNeg` function
  *
  * This function negates an elliptic curve point. On the JubJub twisted
  * Edwards curve, the negation of (x, y) is (-x, y).

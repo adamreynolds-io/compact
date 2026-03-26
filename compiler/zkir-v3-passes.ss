@@ -97,9 +97,9 @@
                      [tmp-y (make-temp-id src 'y)]
                      [tmp-neg-x (make-temp-id src 'neg)])
                  (cons*
-                   `(encode ,tmp-x ,tmp-y ,(car triv*))
-                   `(neg ,tmp-neg-x ,tmp-x)
                    `(decode "Point<Jubjub>" ,(car var-name*) ,tmp-neg-x ,tmp-y)
+                   `(neg ,tmp-neg-x ,tmp-x)
+                   `(encode ,tmp-x ,tmp-y ,(car triv*))
                    instr*))]
               [(ecMul)
                (assert (= (length var-name*) 1))

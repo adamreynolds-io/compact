@@ -58068,6 +58068,51 @@ groups than for single tests.
         "  ]"
         "}"))
     )
+
+  ;; ecNeg: negate a JubjubPoint (ZKIR v2)
+  (test
+    '(
+      "import CompactStandardLibrary;"
+      ""
+      "ledger impure: Boolean;"
+      ""
+      "export circuit foo(a: JubjubPoint): JubjubPoint {"
+      "  impure = true;"
+      "  return ecNeg(a);"
+      "}"
+      )
+    (output-file "compiler/testdir/zkir/foo.zkir"
+      '(
+        "{"
+        "  \"version\": { \"major\": 2, \"minor\": 0 },"
+        "  \"do_communications_commitment\": true,"
+        "  \"num_inputs\": 2,"
+        "  \"instructions\": ["
+        "    { \"op\": \"load_imm\", \"imm\": \"01\" },"
+        "    { \"op\": \"load_imm\", \"imm\": \"10\" },"
+        "    { \"op\": \"load_imm\", \"imm\": \"00\" },"
+        "    { \"op\": \"declare_pub_input\", \"var\": 3 },"
+        "    { \"op\": \"declare_pub_input\", \"var\": 2 },"
+        "    { \"op\": \"declare_pub_input\", \"var\": 2 },"
+        "    { \"op\": \"declare_pub_input\", \"var\": 2 },"
+        "    { \"op\": \"declare_pub_input\", \"var\": 4 },"
+        "    { \"op\": \"pi_skip\", \"guard\": 2, \"count\": 5 },"
+        "    { \"op\": \"load_imm\", \"imm\": \"11\" },"
+        "    { \"op\": \"declare_pub_input\", \"var\": 5 },"
+        "    { \"op\": \"declare_pub_input\", \"var\": 2 },"
+        "    { \"op\": \"declare_pub_input\", \"var\": 2 },"
+        "    { \"op\": \"declare_pub_input\", \"var\": 2 },"
+        "    { \"op\": \"declare_pub_input\", \"var\": 2 },"
+        "    { \"op\": \"pi_skip\", \"guard\": 2, \"count\": 5 },"
+        "    { \"op\": \"load_imm\", \"imm\": \"91\" },"
+        "    { \"op\": \"declare_pub_input\", \"var\": 6 },"
+        "    { \"op\": \"pi_skip\", \"guard\": 2, \"count\": 1 },"
+        "    { \"op\": \"neg\", \"a\": 0 },"
+        "    { \"op\": \"output\", \"var\": 7 },"
+        "    { \"op\": \"output\", \"var\": 1 }"
+        "  ]"
+        "}")))
+
   )
 
 (parameterize ([feature-zkir-v3 #t])
@@ -64444,10 +64489,10 @@ groups than for single tests.
     '(
       "import CompactStandardLibrary;"
       ""
-      "ledger forceField: Field; circuit forceProof(): [] { forceField = 7; }"
+      "ledger impure: Boolean;"
       ""
       "export circuit foo(a: JubjubPoint): JubjubPoint {"
-      "  forceProof();"
+      "  impure = true;"
       "  return ecNeg(a);"
       "}"
       )
@@ -64460,11 +64505,11 @@ groups than for single tests.
         "    { \"name\": \"%a.0\", \"type\": \"Point<Jubjub>\" }"
         "  ],"
         "  \"instructions\": ["
-        "    { \"op\": \"impact\", \"guard\": \"0x01\", \"inputs\": [\"0x10\", \"0x01\", \"0x01\", \"0x01\", \"0x00\", \"0x11\", \"0x01\", \"0x01\", \"-0x02\", \"0x07\", \"0x91\"] },"
-        "    { \"op\": \"decode\", \"type\": \"Point<Jubjub>\", \"output\": \"%t.1\", \"inputs\": [\"%neg.2\", \"%y.3\"] },"
-        "    { \"op\": \"neg\", \"output\": \"%neg.2\", \"a\": \"%x.4\" },"
-        "    { \"op\": \"encode\", \"outputs\": [\"%x.4\", \"%y.3\"], \"input\": \"%a.0\" },"
-        "    { \"op\": \"output\", \"val\": \"%t.1\" }"
+        "    { \"op\": \"impact\", \"guard\": \"0x01\", \"inputs\": [\"0x10\", \"0x01\", \"0x01\", \"0x01\", \"0x00\", \"0x11\", \"0x01\", \"0x01\", \"0x01\", \"0x01\", \"0x91\"] },"
+        "    { \"op\": \"encode\", \"outputs\": [\"%x.1\", \"%y.2\"], \"input\": \"%a.0\" },"
+        "    { \"op\": \"neg\", \"output\": \"%neg.3\", \"a\": \"%x.1\" },"
+        "    { \"op\": \"decode\", \"type\": \"Point<Jubjub>\", \"output\": \"%t.4\", \"inputs\": [\"%neg.3\", \"%y.2\"] },"
+        "    { \"op\": \"output\", \"val\": \"%t.4\" }"
         "  ]"
         "}")))
 
@@ -81303,6 +81348,21 @@ groups than for single tests.
         "});"
         ))
     )
+
+  ;; ecNeg: negate a JubjubPoint (print-typescript, both backends)
+  (test
+    '(
+      "import CompactStandardLibrary;"
+      ""
+      "ledger impure: Boolean;"
+      ""
+      "export circuit foo(a: JubjubPoint): JubjubPoint {"
+      "  impure = true;"
+      "  return ecNeg(a);"
+      "}"
+      )
+    (succeeds))
+
 )
 
 (run-javascript)

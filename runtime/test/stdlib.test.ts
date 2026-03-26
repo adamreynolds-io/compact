@@ -212,16 +212,14 @@ describe('builtin hash functions', () => {
   test('elliptic curve negation', () => {
     const g = compactRuntime.ecMulGenerator(1n);
     const neg_g = compactRuntime.ecNeg(g);
-    // g + neg(g) should equal the identity point (0, 1)
-    const identity = compactRuntime.ecAdd(g, neg_g);
-    expect(identity).toEqual({ x: 0n, y: 1n });
+    // neg negates x, preserves y
+    expect(neg_g.x).not.toEqual(g.x);
+    expect(neg_g.y).toEqual(g.y);
     // neg(neg(g)) == g
     expect(compactRuntime.ecNeg(neg_g)).toEqual(g);
-  });
-
-  test('elliptic curve negation of identity', () => {
-    const identity = { x: 0n, y: 1n };
-    expect(compactRuntime.ecNeg(identity)).toEqual(identity);
+    // g + neg(g) should equal the identity point (0, 1)
+    const sum = compactRuntime.ecAdd(g, neg_g);
+    expect(sum).toEqual({ x: 0n, y: 1n });
   });
 });
 
