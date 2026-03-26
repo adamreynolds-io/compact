@@ -208,6 +208,21 @@ describe('builtin hash functions', () => {
     expect(typeof lhs.x).toEqual('bigint');
     expect(typeof lhs.y).toEqual('bigint');
   });
+
+  test('elliptic curve negation', () => {
+    const g = compactRuntime.ecMulGenerator(1n);
+    const neg_g = compactRuntime.ecNeg(g);
+    // g + neg(g) should equal the identity point (0, 1)
+    const identity = compactRuntime.ecAdd(g, neg_g);
+    expect(identity).toEqual({ x: 0n, y: 1n });
+    // neg(neg(g)) == g
+    expect(compactRuntime.ecNeg(neg_g)).toEqual(g);
+  });
+
+  test('elliptic curve negation of identity', () => {
+    const identity = { x: 0n, y: 1n };
+    expect(compactRuntime.ecNeg(identity)).toEqual(identity);
+  });
 });
 
 test('sanity check for contract address utilities', () => {

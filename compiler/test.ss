@@ -64438,6 +64438,36 @@ groups than for single tests.
         "  ]"
         "}"))
     )
+
+  ;; ecNeg: negate a JubjubPoint
+  (test
+    '(
+      "import CompactStandardLibrary;"
+      ""
+      "ledger forceField: Field; circuit forceProof(): [] { forceField = 7; }"
+      ""
+      "export circuit foo(a: JubjubPoint): JubjubPoint {"
+      "  forceProof();"
+      "  return ecNeg(a);"
+      "}"
+      )
+    (output-file "compiler/testdir/zkir/foo.zkir"
+      '(
+        "{"
+        "  \"version\": { \"major\": 3, \"minor\": 0 },"
+        "  \"do_communications_commitment\": false,"
+        "  \"inputs\": ["
+        "    { \"name\": \"%a.0\", \"type\": \"Point<Jubjub>\" }"
+        "  ],"
+        "  \"instructions\": ["
+        "    { \"op\": \"impact\", \"guard\": \"0x01\", \"inputs\": [\"0x10\", \"0x01\", \"0x01\", \"0x01\", \"0x00\", \"0x11\", \"0x01\", \"0x01\", \"-0x02\", \"0x07\", \"0x91\"] },"
+        "    { \"op\": \"decode\", \"type\": \"Point<Jubjub>\", \"output\": \"%t.1\", \"inputs\": [\"%neg.2\", \"%y.3\"] },"
+        "    { \"op\": \"neg\", \"output\": \"%neg.2\", \"a\": \"%x.4\" },"
+        "    { \"op\": \"encode\", \"outputs\": [\"%x.4\", \"%y.3\"], \"input\": \"%a.0\" },"
+        "    { \"op\": \"output\", \"val\": \"%t.1\" }"
+        "  ]"
+        "}")))
+
 )
 )
 
