@@ -212,8 +212,9 @@ describe('builtin hash functions', () => {
   test('elliptic curve negation', () => {
     const g = compactRuntime.ecMulGenerator(1n);
     const neg_g = compactRuntime.ecNeg(g);
-    // neg negates x, preserves y
-    expect(neg_g.x).not.toEqual(g.x);
+    // neg(x, y) = (FIELD_MODULUS - x, y)
+    const FIELD_MODULUS = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001n;
+    expect(neg_g.x).toEqual(FIELD_MODULUS - g.x);
     expect(neg_g.y).toEqual(g.y);
     // neg(neg(g)) == g
     expect(compactRuntime.ecNeg(neg_g)).toEqual(g);
